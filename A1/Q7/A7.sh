@@ -15,7 +15,7 @@ for i in {a..z}
 do
     touch $out_path/$i.txt
 done
-# cd $file_path
+cd $file_path
 for file in *.txt
 do
     cat $file | while read line 
