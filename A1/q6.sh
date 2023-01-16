@@ -1,26 +1,38 @@
 #!/bin/bash
-filename=$1
-LCM=1
-line_no=0
-while read line;do
-n=$line
-num=0
-line_no=$(expr $line_no + 1)
-while [ $n -gt 0 ];do
-    num=$(expr $num \* 10)
-    k=$(expr $n % 10)
-    num=$(expr $num + $k)
-    n=$(expr $n / 10)
+filename=input.txt
+maxn=1000005
+declare -a arr
+for i in $(seq 2 $maxn)
+do
+    arr[$i]=1
 done
-echo "Line = $line_no $num"
-a=$LCM
-b=$num
-while [ $num -ne 0 ];do
-    r=$(expr $LCM % $num)
-    LCM=$num
-    num=$r
+i=2
+while [ $i -le $maxn ]
+do
+    if [ ${arr[$i]} -eq 1 ]
+    then
+        mul=$(expr $i \* 2)
+        while [ $mul -le $maxn ]
+        do
+            arr[$mul]=0
+            mul=$(expr $mul + $i)
+        done
+    fi
+    i=$(expr $i + 1)
 done
-p=$(expr $a / $LCM)
-LCM=$(expr $p \* $b)
+output_path=output.txt
+touch $output_path
+while read line
+do
+    n=$line
+    i=2
+    while [ $i -le $n ]
+    do
+        if [ ${arr[$i]} -eq 1 ]
+        then
+            printf "%d " $i >> $output_path
+        fi  
+        i=$(expr $i + 1)
+    done
+    printf "\n" >> $output_path
 done < $filename
-echo "LCM = $LCM"
