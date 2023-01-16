@@ -14,6 +14,5 @@ input_string=$input_string".$3]"
 for f in $(find "$input_path" -name '*.jsonl'); do
     filename="$output_path$(basename "$f" | sed 's/.jsonl/.csv/')"
     echo "$input_string" | sed 's/\]//' | sed 's/\[//' | sed 's/\.//g' > $filename
-    curl -s '$f' 
-    cat $f | jq -r --arg input_string $input_string "$input_string | join(\",\")" >> $filename
+    curl -s '$f' | cat $f | jq -r --arg input_string $input_string "$input_string | join(\",\")" >> $filename
 done
