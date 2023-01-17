@@ -8,13 +8,13 @@ while IFS= read -r username; do
                 flag=1
                 break
             fi
-        done < $2 
+        done < "fruits.txt" 
     else
         flag=1
     fi
     if [[ $flag -eq 1 ]]; then
-        echo "NO"
+        echo "NO" >> "validation_results.txt"
     else
-        echo "YES"
+        echo "YES" >> "validation_results.txt"
     fi
 done < $1
