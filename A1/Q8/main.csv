@@ -1,0 +1,16 @@
+Date,Category,Amount,Name
+01-01-23,drinks,250,Mohan
+01-01-23,drinks,50,subhu
+01-01-23,drinks,50,subhu
+-c,drinks,01-01-23,drinks
+-h,0-1-2,milk,23
+-h,0-1-2,milk,23
+-h,0-1-2,milk,23
+-h,0-1-2,milk,23
+-h,0-1-2,milk,23
+-h,0-1-2,milk,23
+-h,0-1-2,milk,23
+-ccolumn,0-1-2,milk,23
+0-1-2,milk,23,fdasfa
+0-1-2,milk,23,fdasfa
+0-1-2,milk,23,fdsad
