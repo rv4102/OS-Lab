@@ -18,7 +18,8 @@ function AmountByCategory(){
         then
             tot_amt=$(($tot_amt + $amount))
         fi
-    done < <( tail -n +2 $CSV )
+    done < $CSV
+    # done < <( tail -n +2 $CSV )
     echo "Total Amount in Category : $OPTARG is $tot_amt"
 }
 function AmountByName(){
@@ -29,31 +30,26 @@ function AmountByName(){
         then
             tot_amt=$(($tot_amt + $amount))
         fi
-    done < <( tail -n +2 $CSV )
+    done < $CSV
+    # done < <( tail -n +2 $CSV )
     echo "Total Amount by : $OPTARG is $tot_amt"
 }
-function getCol(){
-    if [ "$1" == "Date" ]
-    then
-        cat $CSV | cut -d ',' -f1 
-    elif [ "$1" == "Category" ]
-    then
-        cat $CSV | cut -d ',' -f2
-    elif [ "$1" == "Amount" ]
-    then
-        cat $CSV | cut -d ',' -f3
-    elif [ "$1" == "Name" ]
-    then
-        cat $CSV | cut -d ',' -f4
-    else
-        echo "Invalid Column : $1 , the valid columns are : Date, Category, Amount, Name"
-    fi
+function SortByCol(){
+    col=0
+    case $1 in
+    Date) col=1;;
+    Category) col=2;;
+    Amount) col=3;;
+    Name) col=4;;
+    *) echo "Invalid Column : $1 , the valid columns are : Date, Category, Amount, Name";;
+    esac        
+    sort -t, -k$col $CSV -o $CSV     
 }
 while getopts ":c:n:s:h" flag;do
     case $flag in
     c) AmountByCategory "$OPTARG";;
     n) AmountByName "$OPTARG";;
-    s) getCol "$OPTARG";;
+    s) SortByCol "$OPTARG";;
     h) help ;;
     ?)echo "Invalid Flag Recieved : $OPTARG";;
     esac
@@ -63,4 +59,5 @@ shift $((OPTIND-1))
 
 if [[ $# -eq 4 ]]; then
     echo $1,$2,$3,$4 >> $CSV
+    SortByCol "Date"
 fi

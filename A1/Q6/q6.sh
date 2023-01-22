@@ -1,18 +1,25 @@
 #!/bin/bash
 input_file=input1.txt
 maxn=1000000
-declare -a is_prime
+
+declare -a spf
 sieve_of_eratosthene() {
-    for((i=2; i<=maxn; i++))
+    for((i=1; i<=maxn; i++))
     do
-        is_prime[i]=1
+        spf[i]=$i
     done
-    for((p=2; p*p<=maxn; p++))
+    for((i=4; i<=maxn; i+=2))
+    do
+        spf[i]=2
+    done
+    for((p=3; p*p<=maxn; p=p+2))
     do 
-        if [[ ${is_prime[p]} -eq 1 ]]; then
+        if [[ ${spf[p]} -eq $p ]]; then
             for((i=p*p; i<=maxn; i+=p))
             do
-                is_prime[i]=0
+                if [[ ${spf[i]} -eq $i ]]; then
+                    spf[i]=$p
+                fi
             done   
         fi 
     done
@@ -23,9 +30,15 @@ while read -r n
 do
     for((i=1; i<=n; i++))
     do
-        if [[ ${is_prime[i]} -eq 1 ]]; then
-            echo -n "$i "
-        fi 
+        while [ $n -ne 1 ]
+        do
+            factor=${spf[n]}
+            while [[ $(($n%$factor)) -eq 0 ]]
+            do
+                n=$((n/factor))
+            done
+            echo -n "$factor "
+        done
     done
     echo
 done < $input_file > $output_path
