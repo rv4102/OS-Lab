@@ -1,5 +1,5 @@
 #!/bin/bash
-input_file=input1.txt
+input_file=$1
 maxn=1000000
 
 declare -a spf
@@ -25,7 +25,7 @@ sieve_of_eratosthene() {
     done
 }
 sieve_of_eratosthene
-output_path=output1.txt
+output_path=output.txt
 while read -r n
 do
     for((i=1; i<=n; i++))
