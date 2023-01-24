@@ -1,6 +1,6 @@
-Q1/Assgn1_1_24.sh 59
+Q1/Assgn1_1_24.sh 46
 Q2/Assgn1_2_24.sh 70
 Q4/Assgn1_4_24.sh 31
 Q7/Assgn1_7_24.sh 45
 Q9/Assgn1_9_24.sh 58
-Total:  263
+Total:  250
