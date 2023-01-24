@@ -13,3 +13,4 @@ while read -r username; do
     fi
     echo $out >> "validation_results.txt"
 done < $1
+

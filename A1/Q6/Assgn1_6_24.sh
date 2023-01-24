@@ -1,7 +1,6 @@
 #!/bin/bash
 input_file=$1
 maxn=1000000
-
 declare -a spf
 sieve_of_eratosthene() {
     for((i=1; i<=maxn; i++))
