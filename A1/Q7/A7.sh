@@ -15,11 +15,13 @@ for i in {a..z}
 do
     touch $out_path/$i.txt
 done
+
 cd $file_path
 for file in *.txt
 do
     cat $file | while read line 
     do
+        line=$(echo $line | tr '[:upper:]' '[:lower:]')
         echo $line >> $out_path/${line:0:1}.txt
     done
 done
