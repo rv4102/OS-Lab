@@ -41,6 +41,22 @@ int main(){
                 printf("%s ", args[j]);
             }
             printf("\n");
+            for(int j=0; j<i; j++){
+                if(strcmp(args[j], ">") == 0){
+                    freopen(args[j+1], "w", stdout);
+                    args[j] = NULL;
+                }
+                else if(strcmp(args[j], "<") == 0){
+                    if(access(args[j+1], F_OK) != -1){
+                        freopen(args[j+1], "r", stdin);
+                    }
+                    else{
+                        printf("File not found\n");
+                        exit(0);
+                    }
+                    args[j] = NULL;
+                }
+            }
             int execvp_return = execvp(args[0], args);
             if(execvp_return == -1){
                 printf("Command not found\n");
