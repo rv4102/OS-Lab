@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <string.h>
+#include <fcntl.h>
 
 void print_prompt(){
     char pcname[100];
@@ -18,6 +19,48 @@ void print_prompt(){
     printf("\033[0;37m");
 }
 
+void run_command(char* args[], int i){
+    for(int j=0; j<i; j++){
+        if(strcmp(args[j], "<") == 0){
+            if(access(args[j+1], F_OK) != -1){
+                dup2(open(args[j+1], O_RDONLY), 0);
+            }
+            else{
+                printf("File not found\n");
+                exit(0);
+            }
+            args[j] = NULL;
+        }
+        else if(strcmp(args[j], ">") == 0){
+            dup2(open(args[j+1], O_WRONLY | O_CREAT, 0666), 1);
+            args[j] = NULL;
+        }
+        else if(strcmp(args[j], "|") == 0){
+            int fd[2];
+            pipe(fd);
+            pid_t pid2 = fork();
+            if(pid2 == 0){
+                close(fd[0]);
+                dup2(fd[1], 1);
+                close(fd[1]);
+                args[j] = NULL;
+                run_command(args, j);
+            }
+            else{
+                waitpid(pid2, NULL, 0);
+                close(fd[1]);
+                dup2(fd[0], 0);
+                close(fd[0]);
+                run_command(args+j+1, i-j-1);
+            }
+        }
+    }
+    int execvp_return = execvp(args[0], args);
+    if(execvp_return == -1){
+        printf("Command not found\n");
+    }
+    exit(0);
+}
 int main(){
     while(1){
         print_prompt();
@@ -45,31 +88,11 @@ int main(){
                 token = strtok(NULL, " ");
             }
             args[i] = NULL;
-            for(int j = 0; j < i; j++){
-                printf("%s ", args[j]);
-            }
-            printf("\n");
-            for(int j=0; j<i; j++){
-                if(strcmp(args[j], ">") == 0){
-                    freopen(args[j+1], "w", stdout);
-                    args[j] = NULL;
-                }
-                else if(strcmp(args[j], "<") == 0){
-                    if(access(args[j+1], F_OK) != -1){
-                        freopen(args[j+1], "r", stdin);
-                    }
-                    else{
-                        printf("File not found\n");
-                        exit(0);
-                    }
-                    args[j] = NULL;
-                }
-            }
-            int execvp_return = execvp(args[0], args);
-            if(execvp_return == -1){
-                printf("Command not found\n");
-            }
-            exit(0);
+            // for(int j = 0; j < i; j++){
+            //     printf("%s ", args[j]);
+            // }
+            // printf("\n");
+            run_command(args, i);
         }
         else{
             if(run_in_background == 0){

@@ -1,0 +1,15 @@
+a.out
+cal
+cal.c
+input.txt
+OSlab-Asgn2-shell-design-2023-part-1-part-2.pdf
+out.txt
+part1.c
+q.c
+0 Feb  3 23:27 cal
+-rw-rw-r-- 1 shivam shivam    99 Feb  3 18:32 cal.c
+-rw-rw-r-- 1 shivam shivam     5 Feb  3 23:29 input.txt
+-rw-rw-r-- 1 shivam shivam 88298 Feb  3 17:23 OSlab-Asgn2-shell-design-2023-part-1-part-2.pdf
+-rw-rw-r-- 1 shivam shivam    95 Feb  3 23:53 out.txt
+-rw-rw-r-- 1 shivam shivam  2062 Feb  3 19:33 part1.c
+-rw-rw-r-- 1 shivam shivam  4856 Feb  3 23:52 q.c
