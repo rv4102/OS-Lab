@@ -1,8 +1,5 @@
 #!/bin/bash
-if [ ! -d "$2" ]
-then
-    mkdir $2
-fi
+mkdir -p $2
 for i in {a..z}
 do
     touch $2/$i.txt
