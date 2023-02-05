@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <unistd.h>
@@ -23,7 +24,9 @@ bool ongoing = false;
 int run_in_background = 0;
 int inotify_fd;
 
-// vector <string> history;
+vector <string> history;
+int ind = 0;
+bool up = false;
 vector<string> temp_files;
 string command_executing = "";
 void print_prompt(){
@@ -259,52 +262,89 @@ void signal_handler_CtrlZ(int signum){
 int main(){
     signal(SIGINT, signal_handler_CtrlC);
     signal(SIGTSTP, signal_handler_CtrlZ);
-    char firstchar = '\0';
-    char secchar = '\0';
+
+    // char firstchar = '\0';
+    // char secchar = '\0';
     while(1){
         print_prompt();
         string cmd;
-        setup_terminal();
         // getline(cin, cmd);
 
         while(1){
+            setup_terminal();
             char c = getchar();
         // printf("%d\n",c);
             
             // char c = getch();
             if(c == 10) break;
             else if(c == 127){
+                ind = history.size();
                 if(cmd.size() > 0){
                     cmd.pop_back();
                     cout<<"\b \b";
              }  
             }
-            else if(c == 65 && secchar == 91 && firstchar == 27){
-                //up arrow
-                cout<<"up arrow pressed"<<endl;
-            }
-            else if(c== 66 && secchar == 91 && firstchar == 27){
-                //down arrow
-                cout<<"down arrow pressed"<<endl;
-            }
+            // else if(c == 65 && secchar == 91 && firstchar == 27){
+            //     //up arrow
+            //     cout<<"up arrow pressed";
+            // }
+            // else if(c== 66 && secchar == 91 && firstchar == 27){
+            //     //down arrow
+            //     cout<<"down arrow pressed";
+            // }
             else if(c == 27){
-                firstchar = c;
-            }
-            else if(c == 72){
-                cout<<"up arrow pressed";
+                c = getchar();
+                c = getchar();
+                if(c=='A'){
+                    if(ind==-1){
+                        ind = history.size()-1;
+                    }
+                    up = true;
+                    //up arrow
+                    // cout<<"up arrow pressed";
+                    while(cmd.size() > 0){
+                        cmd.pop_back();
+                        cout<<"\b \b";
+                    }
+                    if(ind >= 0){
+                        cout<<history[ind-1];
+                        cmd = history[ind-1];
+                        ind--;
+                    }
+                    
+                }
+                else if(c=='B'){
+                    //down arrow
+                    // cout<<"down arrow pressed";
+                    
+                    // cout<<ind<<" ";
+                    if(ind < history.size()-1){
+                        while(cmd.size() > 0){
+                        cmd.pop_back();
+                        cout<<"\b \b";
+                    }
+                        ind++;
+                        cout<<history[ind];
+                        cmd = history[ind];
+                    
+                    }
+                    
+                }
+                else ind = history.size();
             }
             else{
+                ind = history.size();
                 cmd += c;
                 cout<<c;
             }
-            firstchar = secchar;
-            secchar = c;
         }
         // printf("%")
         cout<<endl;
         if(cmd == "exit"){
             break;
         }
+        history.push_back(cmd);
+        ind++;
         cmd = trim(cmd);
         reset_terminal();
         if(cmd == "exit"){
