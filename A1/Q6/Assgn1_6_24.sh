@@ -1,5 +1,5 @@
 #!/bin/bash
-maxn=1000000
+maxn=500
 declare -a spf
 for ((i=1; i<=maxn; i++))
 do
@@ -18,11 +18,10 @@ do
         done
     fi
 done
->output.txt
 while read n; do
     while [[ $n -ne 1 ]]; do
         echo -n "${spf[$n]} "
         n=$((n/${spf[$n]}))
     done
     echo
-done < $1
+done < $1 >output.txt
