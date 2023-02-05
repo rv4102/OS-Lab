@@ -11,16 +11,19 @@
 #include <termios.h>
 #include <sys/inotify.h>
 #include <glob.h>
+// #include <curses.h>
 
 using namespace std;
 
 #define GREEN "\033[1;32m"
 #define BLUE "\033[1;34m"
 #define RESET "\033[0m"
-
-
+bool parent = 1;
+bool ongoing = false;
 int run_in_background = 0;
 int inotify_fd;
+
+// vector <string> history;
 vector<string> temp_files;
 string command_executing = "";
 void print_prompt(){
@@ -173,6 +176,7 @@ void process_command(string cmd){
             }
             pid_t pid = fork();
             if(pid == 0){
+                parent = false;
                 if(i == 0 || i == commands.size()-1){
                     redirect_in_out(redirections[1], redirections[2]);
                 }
@@ -221,22 +225,25 @@ void process_command(string cmd){
         vector<string> args = split(redirections[0], ' ');
         pid_t pid = fork();
         if(pid == 0){
+            parent = false;
             redirect_in_out(redirections[1], redirections[2]);
             execute_command(args);
         }
         if(!run_in_background){
+            ongoing = true;
             waitpid(pid, &status, WUNTRACED);
             if(WIFSTOPPED(status)){
                 kill(pid, SIGCONT);
             }
-        }
+        }   
     }
 
 }
 void signal_handler_CtrlC(int signum){
-    cout<<endl;
+    cout << endl;
+    if(!ongoing)
+        print_prompt();
     // halt the current process
-    print_prompt();
     fflush(stdout);
 }
 
@@ -252,41 +259,60 @@ void signal_handler_CtrlZ(int signum){
 int main(){
     signal(SIGINT, signal_handler_CtrlC);
     signal(SIGTSTP, signal_handler_CtrlZ);
-    int status = 0;
+    char firstchar = '\0';
+    char secchar = '\0';
     while(1){
         print_prompt();
         string cmd;
-        // setup_terminal();
-        getline(cin, cmd);
-        // while(1){
-        //     char c = getchar();
-        //     if(c == 10) break;
-        //     else if(c == 127){
-        //         if(cmd.size() > 0){
-        //             cmd.pop_back();
-        //             cout<<"\b \b";
-        //       in  }
-        //     }
-        //     else if(c == 38){
-        //         // up arrow
-        //     }else if(c == 40){
-        //         // down arrow
-        //     }
-        //     else{
-        //         cmd += c;
-        //         cout<<c;
-        //     }
-        // }
+        setup_terminal();
+        // getline(cin, cmd);
+
+        while(1){
+            char c = getchar();
+        // printf("%d\n",c);
+            
+            // char c = getch();
+            if(c == 10) break;
+            else if(c == 127){
+                if(cmd.size() > 0){
+                    cmd.pop_back();
+                    cout<<"\b \b";
+             }  
+            }
+            else if(c == 65 && secchar == 91 && firstchar == 27){
+                //up arrow
+                cout<<"up arrow pressed"<<endl;
+            }
+            else if(c== 66 && secchar == 91 && firstchar == 27){
+                //down arrow
+                cout<<"down arrow pressed"<<endl;
+            }
+            else if(c == 27){
+                firstchar = c;
+            }
+            else if(c == 72){
+                cout<<"up arrow pressed";
+            }
+            else{
+                cmd += c;
+                cout<<c;
+            }
+            firstchar = secchar;
+            secchar = c;
+        }
+        // printf("%")
+        cout<<endl;
         if(cmd == "exit"){
             break;
         }
         cmd = trim(cmd);
-        // reset_terminal();
+        reset_terminal();
         if(cmd == "exit"){
-            // reset_terminal();
+            reset_terminal();
             return 0;
         }
         process_command(cmd);
+        ongoing = false;
     }
 }
 
