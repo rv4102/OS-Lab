@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -10,8 +9,8 @@
 #include <cstring>
 #include <cstdio>
 #include <termios.h>
-#include <sys/inotify.h>
 #include <glob.h>
+#include <signal.h>
 // #include <curses.h>
 
 using namespace std;
@@ -23,6 +22,7 @@ bool parent = 1;
 bool ongoing = false;
 int run_in_background = 0;
 int inotify_fd;
+pid_t id_before_execvp;
 
 vector <string> history;
 int ind = 0;
@@ -137,6 +137,37 @@ void redirect_in_out(string inp, string out){
     }
 }
 
+void signal_handler_CtrlC(int signum){
+    cout << endl;
+    // if(!ongoing)
+    //     print_prompt();
+    // // halt the current process
+    // fflush(stdout);
+
+
+}
+
+void signal_handler_CtrlZ(int signum){
+    cout<<endl;
+    cout << "Shell : " << getpid() << endl;
+
+    /* re-set the signal handler again to catch_int, for next time */
+    signal(SIGTSTP, signal_handler_CtrlZ);
+
+    // cout<<"[1]+ Stopped "<<command_executing<<endl;
+    // print_prompt();
+    // fflush(stdout);
+    // if(!run_in_background){
+    //     run_in_background = 1;
+    // }
+
+    // pid_t curr_proc_pid = getpid();
+    // kill(curr_proc_pid, SIGSTOP); // halt(not terminate) the current process
+    run_in_background = 0;
+    cout << "Yeh chal jao pls : " << id_before_execvp << endl;
+    // kill(id_before_execvp, SIGCONT);
+}
+
 void execute_command(vector<string> args){
     // expand wildcards
     for(int i=0; i<args.size(); i++){
@@ -229,40 +260,27 @@ void process_command(string cmd){
         pid_t pid = fork();
         if(pid == 0){
             parent = false;
+            // signal(SIGTSTP, SIG_DFL);
             redirect_in_out(redirections[1], redirections[2]);
             execute_command(args);
         }
-        if(!run_in_background){
-            ongoing = true;
-            waitpid(pid, &status, WUNTRACED);
-            if(WIFSTOPPED(status)){
-                kill(pid, SIGCONT);
+        else{ // in the parent process, get the PID of the child
+            signal(SIGINT, SIG_IGN); // the shell should ignore any Ctrl-C press
+            signal(SIGTSTP, SIG_IGN); // the shell should ignore any Ctrl-Z press
+            if(!run_in_background){
+                ongoing = true;
+                waitpid(pid, &status, WUNTRACED);
+                if(WIFSTOPPED(status)){
+                    kill(pid, SIGCONT); // continue the child process
+                }
             }
-        }   
+        }  
     }
 
-}
-void signal_handler_CtrlC(int signum){
-    cout << endl;
-    if(!ongoing)
-        print_prompt();
-    // halt the current process
-    fflush(stdout);
-}
-
-void signal_handler_CtrlZ(int signum){
-    cout<<endl;
-    // cout<<"[1]+ Stopped "<<command_executing<<endl;
-    print_prompt();
-    fflush(stdout);
-    if(!run_in_background){
-        run_in_background = 1;
-    }
 }
 int main(){
-    signal(SIGINT, signal_handler_CtrlC);
-    signal(SIGTSTP, signal_handler_CtrlZ);
-
+    signal(SIGINT, SIG_IGN); // the shell should ignore any Ctrl-C press
+    signal(SIGTSTP, SIG_IGN); // the shell should ignore any Ctrl-Z press
     // char firstchar = '\0';
     // char secchar = '\0';
     while(1){
