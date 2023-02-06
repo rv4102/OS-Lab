@@ -276,8 +276,8 @@ int main(){
         // printf("%d\n",c);
             
             // char c = getch();
-            if(c == 10) break;
-            else if(c == 127){
+            if(c == 10) break;//10 --> ascii for newline
+            else if(c == 127){//127 --> ascii for backspace
                 ind = history.size();
                 if(cmd.size() > 0){
                     cmd.pop_back();
@@ -292,7 +292,7 @@ int main(){
             //     //down arrow
             //     cout<<"down arrow pressed";
             // }
-            else if(c == 27){
+            else if(c == 27){//27 --> ascii for escape
                 c = getchar();
                 c = getchar();
                 if(c=='A'){
