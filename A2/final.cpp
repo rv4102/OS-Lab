@@ -13,6 +13,8 @@
 #include <sys/inotify.h>
 #include <glob.h>
 #include <map>
+#include <sstream>
+
 using namespace std;
 
 #define GREEN "\033[1;32m"
@@ -164,9 +166,95 @@ void execute_command(vector<string> args){
     cout<<"Error: Command not found"<<endl;
     exit(1);
 }
+pid_t get_parent(pid_t pid){
+    std::ostringstream stat_path;
+    stat_path << "/proc/" << pid << "/stat";
+    std::ifstream stat_file(stat_path.str());
+    if (!stat_file.is_open()) {
+        perror("Failed to open stat file");
+        return 1;
+    }
+    std::string line;
+    std::getline(stat_file, line);
+    stat_file.close();
 
+    std::istringstream line_stream(line);
+    std::string dummy;
+    int ppid;
+    for (int i = 0; i < 3; ++i) {
+        line_stream >> dummy;
+    }
+    line_stream >> ppid;
+    return ppid;
+}
+double get_cpu_usage(pid_t pid)
+{
+    std::string stat_file = "/proc/" + std::to_string(pid) + "/stat";
+    std::string stat_contents;
+    std::ifstream stream(stat_file);
+    std::getline(stream, stat_contents);
+    stream.close();
+
+    // Split the contents of the stat file by spaces
+    std::vector<std::string> values;
+    std::stringstream stat_stream(stat_contents);
+    std::string buffer;
+    while (stat_stream >> buffer)
+    {
+        values.push_back(buffer);
+    }
+
+    // Get the values of utime and stime
+    long utime = std::stol(values[13]);
+    long stime = std::stol(values[14]);
+    long starttime = std::stol(values[21]);
+
+    // Get the system uptime
+    std::string uptime_file = "/proc/uptime";
+    std::string uptime_contents;
+    stream = std::ifstream(uptime_file);
+    std::getline(stream, uptime_contents);
+    stream.close();
+
+    // Split the contents of the uptime file by spaces
+    values.clear();
+    std::stringstream uptime_stream(uptime_contents);
+    while (uptime_stream >> buffer)
+    {
+        values.push_back(buffer);
+    }
+
+    // Get the value of uptime
+    long uptime = std::stol(values[0]);
+
+    // Calculate the total time the process has spent in user mode and kernel mode
+    long total_time = utime + stime;
+
+    // Calculate the seconds since the process started
+    double seconds_since_start = uptime - (starttime / sysconf(_SC_CLK_TCK));
+
+    // Calculate the current CPU usage of the process
+    return ((total_time / sysconf(_SC_CLK_TCK)) / seconds_since_start) * 100;
+}
+
+pid_t detect_malware(vector<pid_t> pids){
+    int size = pids.size();
+    for(int i = 0; i < size; i++){
+        if(get_cpu_usage(pids[i]) < 0.8){
+            return pids[i];
+        }
+    }
+    return 0;
+}
+vector<pid_t> get_parents(pid_t pid){
+    vector<pid_t> parents;
+    while(pid != 0){
+        parents.push_back(pid);
+        pid = get_parent(pid);
+    }
+    return parents;
+}
 void delep(const char* filepath){
-    // spwan a child process to list all processes using the file
     int fd[2];
     pipe(fd);
     pid_t pid = fork();
@@ -174,7 +262,9 @@ void delep(const char* filepath){
         dup2(fd[1], 1);
         close(fd[0]);
         close(fd[1]);
-        execlp("lsof", "lsof", filepath, NULL);
+        // execlp("lsof", "lsof", filepath, NULL);
+        char* argv[] = {"lsof", (char*)filepath, NULL};
+        execvp("lsof", argv);
         exit(1);
     }
     close(fd[1]);
@@ -190,20 +280,27 @@ void delep(const char* filepath){
     vector<int> pids;
     for(int i=1; i<lines.size(); i++){
         vector<string> words = split(lines[i], ' ');
-        pids.push_back(stoi(words[1]));
+        if(words[3].back() == 'W' || words[3].back() == 'R')
+            pids.push_back(stoi(words[1]));
+    }
+    if(pids.empty()) {
+        cout<<"No processes using the file"<<endl;
+        return;
     }
     cout<<"Processes using the file: ";
     for(auto pid: pids){
         cout<<pid<<" ";
     }cout<<endl;
-    char user_input;
+    string user_input;
     cout<<"Kill Processes using the file? (y/n): ";
     cin>>user_input;
-    if(user_input == 'y'){
+    if(user_input[0] == 'y'){
         for(int i=0; i<pids.size(); i++){
             kill(pids[i], SIGKILL);
         }
-    }else if(user_input == 'n'){
+        unlink(filepath);
+        return;
+    }else if(user_input[0] == 'n'){
         return;
     }else{
         cout<<"Invalid input"<<endl;
@@ -282,6 +379,39 @@ void process_command(string cmd){
                 }
                 const char* file_path = args[1].c_str();
                 delep(file_path);
+            }
+            return;
+        }
+        else if(cmd.find("sb") != string::npos){
+            vector<string> args = split(cmd, ' ');
+            int argc = args.size();
+            if(argc == 1){
+                cout<<"Usage: sb <pid> -suggest"<<endl;
+            }else if(argc <= 3){
+                pid_t create_proc = fork();
+                if(create_proc == 0){
+                    pid_t pid = stoi(args[1]);
+                    vector<pid_t> parents = get_parents(pid);
+                    cout<<"Parent processes: ";
+                    for(auto p: parents){
+                        cout<<p<<" ";
+                    }cout<<endl;
+                    if(argc == 3 && args[2] == "-suggest"){
+                        pid_t malware_pid = detect_malware(parents);
+                        if(malware_pid != 0){
+                            cout << "Malware detected with pid : " << malware_pid << endl;
+                        }
+                        else{
+                            cout << "No malware detected" << endl;
+                        }
+                    }
+                    exit(0);
+                }else{
+                    waitpid(create_proc, &status, WUNTRACED);
+                    if(WIFSTOPPED(status)){
+                        kill(create_proc, SIGCONT);
+                    }
+                }
             }
             return;
         }
