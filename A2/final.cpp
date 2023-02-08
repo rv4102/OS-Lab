@@ -278,12 +278,16 @@ void delep(const char* filepath){
     waitpid(pid, &status, 0);
     vector<string> lines = split(output, '\n');
     vector<int> pids;
+    vector<int> locked_pids;
     for(int i=1; i<lines.size(); i++){
         vector<string> words = split(lines[i], ' ');
         if(words[3].back() == 'W' || words[3].back() == 'R')
+            // pids.push_back(stoi(words[1]));
+            locked_pids.push_back(stoi(words[1]));
+        else
             pids.push_back(stoi(words[1]));
     }
-    if(pids.empty()) {
+    if(pids.empty() && locked_pids.empty()) {
         cout<<"No processes using the file"<<endl;
         return;
     }
@@ -291,12 +295,19 @@ void delep(const char* filepath){
     for(auto pid: pids){
         cout<<pid<<" ";
     }cout<<endl;
-    string user_input;
+    cout<<"Processes using the file and locked: ";
+    for(auto pid: locked_pids){
+        cout<<pid<<" ";
+    }cout<<endl;
     cout<<"Kill Processes using the file? (y/n): ";
+    string user_input;
     cin>>user_input;
     if(user_input[0] == 'y'){
         for(int i=0; i<pids.size(); i++){
             kill(pids[i], SIGKILL);
+        }
+        for(int i=0; i<locked_pids.size(); i++){
+            kill(locked_pids[i], SIGKILL);
         }
         unlink(filepath);
         return;
@@ -475,9 +486,8 @@ int main(){
             history.push_back(line);
         }
         command_history.close();
-    }
+    }      
     ind = history.size();
-
     while(1){
         print_prompt();
         string cmd;
@@ -485,7 +495,10 @@ int main(){
         while(1){
             setup_terminal();
             char c = getchar();
-            if(c == 10) break;//10 --> ascii for newline
+            if(c == 10) {
+                // cout<<"new line"<<endl;
+                break;
+            }
             else if(c == 127){//127 --> ascii for backspace
                 ind = history.size();
                 if(cmd.size() > 0){
@@ -549,16 +562,22 @@ int main(){
             }
         }
         cout<<endl;
-        if(cmd == "exit"){
-            break;
-        }
+        // if(cmd == "exit"){
+        //     cout<<"EXIT AYA BHAIIII"<<endl;
+        //     break;
+        // }
         history.push_back(cmd);
         ind++;
         cmd = trim(cmd);
         reset_terminal();
+        if(cmd.empty()) {
+            history.pop_back();
+            continue;
+        }
         if(cmd == "exit"){
+            history.pop_back();
             reset_terminal();
-            return 0;
+            break;
         }
         process_command(cmd);
         ongoing = false;
