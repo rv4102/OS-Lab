@@ -254,69 +254,92 @@ vector<pid_t> get_parents(pid_t pid){
     }
     return parents;
 }
-void delep(const char* filepath){
-    int fd[2];
-    pipe(fd);
-    pid_t pid = fork();
-    if(pid == 0){
-        dup2(fd[1], 1);
-        close(fd[0]);
-        close(fd[1]);
-        // execlp("lsof", "lsof", filepath, NULL);
-        char* argv[] = {"lsof", (char*)filepath, NULL};
-        execvp("lsof", argv);
-        exit(1);
+int delep(string filename)
+{
+    std::vector<int> pids;
+    DIR *dir;
+    struct dirent *entry;
+    if ((dir = opendir("/proc")) == NULL)
+    {
+        std::cerr << "Error opening /proc directory: " << strerror(errno) << std::endl;
+        return 1;
     }
-    close(fd[1]);
-    string output;
-    char c;
-    while(read(fd[0], &c, 1) > 0){
-        output += c;
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (entry->d_type != DT_DIR)
+        {
+            continue;
+        }
+        int pid = -1;
+        try
+        {
+            pid = std::stoi(entry->d_name);
+        }
+        catch (const std::invalid_argument &e)
+        {
+            continue;
+        }
+        std::string fd_path = "/proc/" + std::to_string(pid) + "/fd";
+        DIR *fd_dir;
+        if ((fd_dir = opendir(fd_path.c_str())) == NULL)
+        {
+            continue;
+        }
+        bool has_file_open = false;
+        struct dirent *fd_entry;
+        while ((fd_entry = readdir(fd_dir)) != NULL)
+        {
+            std::string link_path = fd_path + "/" + fd_entry->d_name;
+            char buffer[1024];
+            ssize_t len = readlink(link_path.c_str(), buffer, 1024 - 1);
+            if (len == -1)
+            {
+                continue;
+            }
+            buffer[len] = '\0';
+            if (strstr(buffer, filename.c_str()) != NULL)
+            {
+                has_file_open = true;
+                break;
+            }
+        }
+        closedir(fd_dir);
+
+        if (has_file_open)
+        {
+            pids.push_back(pid);
+        }
     }
-    close(fd[0]);
-    int status;
-    waitpid(pid, &status, 0);
-    vector<string> lines = split(output, '\n');
-    vector<int> pids;
-    vector<int> locked_pids;
-    for(int i=1; i<lines.size(); i++){
-        vector<string> words = split(lines[i], ' ');
-        if(words[3].back() == 'W' || words[3].back() == 'R')
-            locked_pids.push_back(stoi(words[1]));
-        else
-            pids.push_back(stoi(words[1]));
+    closedir(dir);
+    cout << "Processes with file open: " << endl;
+    for (int i = 0; i < pids.size(); i++)
+    {
+        cout << pids[i] << " ";
     }
-    if(pids.empty() && locked_pids.empty()) {
-        cout<<"No processes using the file"<<endl;
-        return;
-    }
-    cout<<"Processes using the file without locking : ";
-    for(auto pid: pids){
-        cout<<pid<<" ";
-    }cout<<endl;
-    cout<<"Processes using the file and locked: ";
-    for(auto pid: locked_pids){
-        cout<<pid<<" ";
-    }cout<<endl;
-    cout<<"Kill Processes using the file? (y/n): ";
-    string user_input;
-    fgets(&user_input[0], 100, stdin);
-    if(user_input[0] == 'y'){
-        for(int i=0; i<pids.size(); i++){
+    cout << endl;
+
+    cout << "Kill processes? (y/n): ";
+    char choice[100];
+    fgets(choice, 100, stdin);
+    if (choice[0] == 'y')
+    {
+        for (int i = 0; i < pids.size(); i++)
+        {
             kill(pids[i], SIGKILL);
         }
-        for(int i=0; i<locked_pids.size(); i++){
-            kill(locked_pids[i], SIGKILL);
-        }
-        unlink(filepath);
-        return;
-    }else if(user_input[0] == 'n'){
-        return;
-    }else{
-        cout<<"Invalid input"<<endl;
-        return;
     }
-}   
+    else if (choice[0] == 'n')
+    {
+        return 0;
+    }
+    else
+    {
+        cout << "Invalid choice" << endl;
+        return 1;
+    }
+
+    return 0;
+}  
 void process_command(string cmd){
     run_in_background = 0;
     int status = 0;
@@ -387,8 +410,9 @@ void process_command(string cmd){
                 for(int i=2; i<args.size(); i++){
                     args[1] += " " + args[i];
                 }
-                const char* file_path = args[1].c_str();
-                delep(file_path);
+                //const char* file_path = args[1].c_str();
+                //delep(file_path);
+                delep(args[1]);
             }
             return;
         }
