@@ -1,0 +1,22 @@
+clear
+g++ malware_detetion.cpp -o malware_detection
+ls
+./terminal
+delep input.txt
+\n
+lsof input.txt
+\n
+delep inut.txt
+clear
+clear
+yuky
+jhk
+ls
+delep
+delep input.txt
+delep input.txt
+delep input.txt
+clear
+delep input.txt
+ls
+wc try.cpp

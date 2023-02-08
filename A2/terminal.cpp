@@ -240,7 +240,7 @@ double get_cpu_usage(pid_t pid)
 pid_t detect_malware(vector<pid_t> pids){
     int size = pids.size();
     for(int i = 0; i < size; i++){
-        if(get_cpu_usage(pids[i]) < 0.8){
+        if(get_cpu_usage(pids[i]) < 0.001){
             return pids[i];
         }
     }
@@ -282,7 +282,6 @@ void delep(const char* filepath){
     for(int i=1; i<lines.size(); i++){
         vector<string> words = split(lines[i], ' ');
         if(words[3].back() == 'W' || words[3].back() == 'R')
-            // pids.push_back(stoi(words[1]));
             locked_pids.push_back(stoi(words[1]));
         else
             pids.push_back(stoi(words[1]));
@@ -291,7 +290,7 @@ void delep(const char* filepath){
         cout<<"No processes using the file"<<endl;
         return;
     }
-    cout<<"Processes using the file: ";
+    cout<<"Processes using the file without locking : ";
     for(auto pid: pids){
         cout<<pid<<" ";
     }cout<<endl;
@@ -301,7 +300,7 @@ void delep(const char* filepath){
     }cout<<endl;
     cout<<"Kill Processes using the file? (y/n): ";
     string user_input;
-    cin>>user_input;
+    fgets(&user_input[0], 100, stdin);
     if(user_input[0] == 'y'){
         for(int i=0; i<pids.size(); i++){
             kill(pids[i], SIGKILL);
@@ -492,11 +491,11 @@ int main(){
         print_prompt();
         string cmd;
         // getline(cin, cmd);
+        setup_terminal();
         while(1){
-            setup_terminal();
+            
             char c = getchar();
             if(c == 10) {
-                // cout<<"new line"<<endl;
                 break;
             }
             else if(c == 127){//127 --> ascii for backspace
@@ -562,10 +561,7 @@ int main(){
             }
         }
         cout<<endl;
-        // if(cmd == "exit"){
-        //     cout<<"EXIT AYA BHAIIII"<<endl;
-        //     break;
-        // }
+    
         history.push_back(cmd);
         ind++;
         cmd = trim(cmd);

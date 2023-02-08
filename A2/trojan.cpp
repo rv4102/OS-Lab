@@ -8,16 +8,16 @@
 
 void attack()
 {
-    while (1)
-        __asm("");
+    while (1){
+
+    }
 }
 
 int main()
 {
-    printf("root pid: %d", getpid());
+    printf("root pid: %d\n", getpid());
     while (1)
     {
-        sleep(SLEEP_TIME);
         for (int i = 0; i < MAX_PAR_CHILD; i++)
         {
             pid_t p = fork();
@@ -36,6 +36,7 @@ int main()
                 attack();
             }
         }
+        sleep(SLEEP_TIME);
     }
     return 0;
 }
