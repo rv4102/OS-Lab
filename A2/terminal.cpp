@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -339,7 +340,7 @@ int delep(string filename)
     }
 
     return 0;
-}  
+}
 void process_command(string cmd){
     run_in_background = 0;
     int status = 0;
@@ -410,8 +411,8 @@ void process_command(string cmd){
                 for(int i=2; i<args.size(); i++){
                     args[1] += " " + args[i];
                 }
-                //const char* file_path = args[1].c_str();
-                //delep(file_path);
+                // const char* file_path = args[1].c_str();
+                // delep(file_path);
                 delep(args[1]);
             }
             return;
@@ -470,8 +471,9 @@ void process_command(string cmd){
 }
 void signal_handler_CtrlC(int signum){
     cout << endl;
-    if(!ongoing)
+    if(!ongoing){
         print_prompt();
+    }
     // halt the current process
     fflush(stdout);
 }
@@ -497,6 +499,23 @@ void signal_handler_CtrlZ(int signum){
     // }
 }
 
+void print_cmd(string cmd, int cursor_pos, int current_pos, int type){
+    int n = cmd.size();
+    int up = n;
+    if(type == 1) up = n+1; // for backspace and delete
+    if(type == 2) up = n-1; // for insert
+
+    for(int i = current_pos; i<up;i++) cout<<"\033[1C";
+    for(int i=0; i<up; i++){
+        cout<<"\b \b";
+    }
+
+    cout<<cmd;
+    for(int i=0; i<n-cursor_pos; i++){
+        cout<<"\033[1D";            //
+    }
+    // for(int i=0; i<cursor_pos; i++) cout<<"\033[1C";
+}
 int main(){
     signal(SIGINT, signal_handler_CtrlC);
     signal(SIGTSTP, signal_handler_CtrlZ);
@@ -515,19 +534,48 @@ int main(){
         print_prompt();
         string cmd;
         // getline(cin, cmd);
-        setup_terminal();
+        int cursor_pos = 0;
         while(1){
-            
+            // cursor_pos = cmd.size();
+            setup_terminal();
             char c = getchar();
+            // cout<<(int)c<<" ";
             if(c == 10) {
                 break;
             }
             else if(c == 127){//127 --> ascii for backspace
                 ind = history.size();
-                if(cmd.size() > 0){
-                    cmd.pop_back();
-                    cout<<"\b \b";
-             }  
+                // if(cmd.size() > 0){
+                //     cmd.pop_back();
+                //     cout<<"\b \b";
+                // }  
+                if(cursor_pos > 0){
+                    cmd.erase(cursor_pos-1, 1);
+                    // cout<<"\b \b";
+                    // cout<<"\b \b";
+                    // for(int i=cursor_pos-1; i<cmd.size(); i++){
+                    //     cout<<cmd[i];
+                    // }
+
+                    // for(int i=cursor_pos-1; i<cmd.size(); i++){
+                    //     cout<<"\b";
+                    // }
+                    cursor_pos--;
+                    print_cmd(cmd, cursor_pos, cursor_pos + 1, 1);
+                }
+            }
+            else if(c == 126){
+                // cout<<"delete key"<<endl;
+                if(cursor_pos < cmd.size()){
+                    cmd.erase(cursor_pos, 1);
+                    // for(int i=cursor_pos; i<cmd.size(); i++){
+                    //     cout<<cmd[i];
+                    // }
+                    // for(int i=cursor_pos; i<cmd.size(); i++){
+                    //     cout<<"\b";
+                    // }
+                    print_cmd(cmd, cursor_pos,cursor_pos, 1);
+                }
             }
             else if(c == 27){//27 --> ascii for escape
                 c = getchar();
@@ -548,7 +596,7 @@ int main(){
                         cmd = history[ind-1];
                         ind--;
                     }
-                    
+                    cursor_pos = cmd.size();
                 }
                 else if(c=='B'){
                     //down arrow
@@ -562,9 +610,25 @@ int main(){
                         cmd = history[ind];
                     
                     }
-                    
+                    cursor_pos = cmd.size();
                 }
-                else ind = history.size();
+                else {
+                    ind = history.size();
+                    if(c == 'C'){
+                        //right arrow
+                        if(cursor_pos < cmd.size()){
+                            cout<<"\033[1C";
+                            cursor_pos++;
+                        }
+                    }
+                    else if(c == 'D'){
+                        //left arrow
+                        if(cursor_pos > 0){
+                            cout<<"\033[1D";
+                            cursor_pos--;
+                        }
+                    }
+                }
             }
             else if(c == 4){
                 cout<<"exit"<<endl;
@@ -577,15 +641,36 @@ int main(){
                 save_history.close();
                 return 0;
             }
+            else if(c == 1){
+                cursor_pos = 0;
+                cout<<"\033[1D";
+                for(int i=0; i<cmd.size(); i++){
+                    cout<<"\033[1D";
+                }
+            }
+            else if(c == 5){
+                cursor_pos = cmd.size();
+                cout<<"\033[1C";
+                for(int i=0; i<cmd.size(); i++){
+                    cout<<"\033[1C";
+                }
+            }
             else{
                 ind = history.size();
-                if(c!=3 && c!=26)
-                    cmd += c;
-                cout<<c;
+                if(c!=3 && c!=26){  
+                    cmd.insert(cursor_pos, 1, c);
+                    cursor_pos++;
+                    // cmd += c;
+                }
+                // cout<<c;
+                print_cmd(cmd, cursor_pos,cursor_pos-1, 2);
             }
         }
         cout<<endl;
-    
+        // if(cmd == "exit"){
+        //     cout<<"EXIT AYA BHAIIII"<<endl;
+        //     break;
+        // }
         history.push_back(cmd);
         ind++;
         cmd = trim(cmd);
