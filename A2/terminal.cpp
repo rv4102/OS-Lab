@@ -257,61 +257,75 @@ vector<pid_t> get_parents(pid_t pid){
 }
 int delep(string filename)
 {
-    std::vector<int> pids;
-    DIR *dir;
-    struct dirent *entry;
-    if ((dir = opendir("/proc")) == NULL)
+    int fd[2];
+    pipe(fd);
+    pid_t process = fork();
+    if (process == 0)
     {
-        std::cerr << "Error opening /proc directory: " << strerror(errno) << std::endl;
-        return 1;
-    }
-    while ((entry = readdir(dir)) != NULL)
-    {
-        if (entry->d_type != DT_DIR)
+        dup2(fd[1], 1);
+        close(fd[0]);
+        close(fd[1]);
+        DIR *dir;
+        struct dirent *entry;
+        if ((dir = opendir("/proc")) == NULL)
         {
-            continue;
+            std::cerr << "Error opening /proc directory: " << strerror(errno) << std::endl;
+            return 1;
         }
-        int pid = -1;
-        try
+        while ((entry = readdir(dir)) != NULL)
         {
-            pid = std::stoi(entry->d_name);
-        }
-        catch (const std::invalid_argument &e)
-        {
-            continue;
-        }
-        std::string fd_path = "/proc/" + std::to_string(pid) + "/fd";
-        DIR *fd_dir;
-        if ((fd_dir = opendir(fd_path.c_str())) == NULL)
-        {
-            continue;
-        }
-        bool has_file_open = false;
-        struct dirent *fd_entry;
-        while ((fd_entry = readdir(fd_dir)) != NULL)
-        {
-            std::string link_path = fd_path + "/" + fd_entry->d_name;
-            char buffer[1024];
-            ssize_t len = readlink(link_path.c_str(), buffer, 1024 - 1);
-            if (len == -1)
+            if (entry->d_type != DT_DIR)
             {
                 continue;
             }
-            buffer[len] = '\0';
-            if (strstr(buffer, filename.c_str()) != NULL)
+            int pid = -1;
+            try
             {
-                has_file_open = true;
-                break;
+                pid = std::stoi(entry->d_name);
             }
+            catch (const std::invalid_argument &e)
+            {
+                continue;
+            }
+            std::string fd_path = "/proc/" + std::to_string(pid) + "/fd";
+            DIR *fd_dir;
+            if ((fd_dir = opendir(fd_path.c_str())) == NULL)
+            {
+                continue;
+            }
+            // bool has_file_open = false;
+            struct dirent *fd_entry;
+            while ((fd_entry = readdir(fd_dir)) != NULL)
+            {
+                std::string link_path = fd_path + "/" + fd_entry->d_name;
+                char buffer[1024];
+                ssize_t len = readlink(link_path.c_str(), buffer, 1024 - 1);
+                if (len == -1)
+                {
+                    continue;
+                }
+                buffer[len] = '\0';
+                if (strstr(buffer, filename.c_str()) != NULL)
+                {
+                    cout << pid << " ";
+                    break;
+                }
+            }
+            closedir(fd_dir);
         }
-        closedir(fd_dir);
-
-        if (has_file_open)
-        {
-            pids.push_back(pid);
-        }
+        closedir(dir);
+        exit(0);
     }
-    closedir(dir);
+    close(fd[1]);
+    string out;
+    char c;
+    while (read(fd[0], &c, 1) > 0)
+        out += c;
+    close(fd[0]);
+    vector<string> out_sep = split(out, ' ');
+    vector<int> pids;
+    for (auto pid_str : out_sep)
+        pids.push_back(stoi(pid_str));
     cout << "Processes with file open: " << endl;
     for (int i = 0; i < pids.size(); i++)
     {
