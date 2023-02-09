@@ -1,3 +1,5 @@
+// https://stackoverflow.com/questions/33064854/ctrlz-signal-handling-in-c
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
