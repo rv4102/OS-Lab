@@ -614,6 +614,14 @@ int main(){
                 }
                 else if(c=='B'){
                     //down arrow
+                    if(ind == history.size()-1){
+                        while (cmd.size()>0)
+                        {
+                            cmd.pop_back();
+                            cout<<"\b \b";
+                        }
+                        
+                    }
                     if(ind < history.size()-1){
                         while(cmd.size() > 0){
                         cmd.pop_back();
@@ -686,7 +694,7 @@ int main(){
         //     break;
         // }
         history.push_back(cmd);
-        ind++;
+        ind = history.size();
         cmd = trim(cmd);
         reset_terminal();
         if(cmd.empty()) {
