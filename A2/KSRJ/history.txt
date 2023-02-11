@@ -1,0 +1,101 @@
+sleep 1
+sleep 2 | sleep 3
+ls
+ls | wc
+cat makefile | w
+cat makefile | wc
+sleep 30
+ps
+sleep 5 &
+ps
+ps
+sleep 10
+ls &
+ÿÿÿÿÿ
+ls
+delep utils.h
+delep utils.h
+ÿÿÿÿexit
+sb 179689 -suggest
+sleep 50 &
+ps
+kill -9 179978
+sleep 50
+sleep 50
+ps
+kill -9 180215
+ps
+./cal
+ps
+kill -9 180536
+dsfdsfffff
+clear
+hello
+echo fjlglksdjfklkw
+ls
+ls -l
+delep file.txt
+exixt
+./cal
+sleep 50
+sleep 50
+sleep 50
+ÿÿÿÿ
+sleep 50
+ps
+sleep 50
+ps
+ps
+sleep 5
+ÿexit
+sleep 10
+ps
+ÿ
+slepp 5
+sleep 5
+ps
+sleep 5
+ps
+sleep 10
+nkvsdmn
+fejk
+./cal
+./cal
+saldlkasjdlsjasjdÿÿÿÿÿÿÿÿ
+asdjasjdlkasjlkÿ
+ÿexit
+ÿÿexit
+ls
+dj
+ls
+ls | wc
+./cal
+./cal < input.txt | rev
+echo 2314132|rev
+./cal < input.txt > out.txt
+./cal < input.txt | rev
+askdlaskjdlksajdla
+ls
+cat input.txt | sort
+sleep 5 | sleep 10
+sleep 5 | sleep 10
+alskkdjlksajdasjd
+pwd
+cd ..
+cd ..
+cd ./
+cd ../
+cd ..
+ls
+cd ..
+ls
+clear
+mkdir "fuck u"
+ls
+ls
+cd fuck u
+l
+sls
+cd ..
+sb 191754 -suggest
+kill -9 191752
