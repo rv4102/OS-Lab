@@ -22,20 +22,20 @@ int main() {
         return 1;
     }
 
-    void* shmptr = shmat(shmid, NULL, 0);
-    if(shmptr == (void*)-1) {
+    int (*graph)[MAX_NODES] = (int (*)[MAX_NODES])shmat(shmid, 0, 0);
+    if( graph == (void*)-1 ) {
         cerr << "Error: could not attach to shared memory\n";
         return 1;
     }
-    int **graph = (int**)(shmptr);
+
     for(int i = 0;i<MAX_NODES;i++){
         for(int j = 0;j<MAX_NODES;j++){
-            cout<<"hello\n";
+            // cout<<"hello\n";
             cout<<graph[i][j]<<" ";
         }cout<<endl;
     }
 
-    shmdt(shmptr);
+    shmdt(graph);
 
     // vector<int>* graph = static_cast<vector<int>*>(shmptr);
     // for(int i=0; i<MAX_NODES; i++){

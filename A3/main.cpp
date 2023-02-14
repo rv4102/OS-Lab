@@ -27,11 +27,7 @@ int main(int argc, char* argv[]) {
         cerr << "Error: could not create shared memory\n";
         return 1;
     }
-    void* shmptr = shmat(shmid, NULL, 0);
-    if(shmptr == (void*)-1) {
-        cerr << "Error: could not attach to shared memory\n";
-        return 1;
-    }
+    
     // vector<int>* graph = new (shmptr) vector<int>[MAX_NODES];
     // int x, y;
     // while (infile >> x >> y) {
@@ -51,14 +47,23 @@ int main(int argc, char* argv[]) {
     //     cerr << "Error: could not detach from shared memory\n";
     //     return 1;
     // }
-    int **graph = (int**)(shmptr);
-    int *node_neighbour = (int*) ((char*)(shmptr) + sizeof(int*) * MAX_NODES); 
+    int (*graph)[MAX_NODES];
+    graph = (int (*)[MAX_NODES]) shmat(shmid, 0, 0);
+
+    if(graph == (void*)-1) {
+        cerr << "Error: could not attach to shared memory\n";
+        return 1;
+    }
+
+    int *node_neighbour = (int*) ((char*)(graph) + sizeof(int*) * MAX_NODES); 
+
     for(int i = 0; i < MAX_NODES; i++) {
-        graph[i] = &node_neighbour[i * MAX_NODES];
+        // graph[i] = node_neighbour[i * MAX_NODES];
         for(int j = 0; j < MAX_NODES; j++) {
             graph[i][j] = 0;
         }
     }
+
     int x, y;
     while (infile >> x >> y) {
         graph[x][y] = 1;
@@ -72,7 +77,7 @@ int main(int argc, char* argv[]) {
         }cout<<endl;
     }
 
-    shmdt(shmptr);
+    shmdt(graph);
 
     return 0;
 }
