@@ -16,7 +16,7 @@ int main() {
     // }
 
     // get shared memory ID
-    int shmid = shmget(1234, 1024, 0666);
+    int shmid = shmget(0x1234, 1024, 0666);
     if (shmid == -1) {
         cerr << "Error: could not get shared memory ID\n";
         return 1;
@@ -27,20 +27,30 @@ int main() {
         cerr << "Error: could not attach to shared memory\n";
         return 1;
     }
-    vector<int>* graph = static_cast<vector<int>*>(shmptr);
-    for(int i=0; i<MAX_NODES; i++){
-        cout<<i<<": ";
-        if(graph[i].empty()) continue;
-        cout<<"NOT EMPTY\n";
-        for(int j=0; j<graph[i].size(); j++){
-            // cout<<graph[i][j]<<" ";
-            cout<<graph[i].at(j)<<" ";
+    int **graph = (int**)(shmptr);
+    for(int i = 0;i<MAX_NODES;i++){
+        for(int j = 0;j<MAX_NODES;j++){
+            cout<<"hello\n";
+            cout<<graph[i][j]<<" ";
         }cout<<endl;
     }
-    if(shmdt(shmptr) == -1) {
-        cerr << "Error: could not detach from shared memory\n";
-        return 1;
-    }
+
+    shmdt(shmptr);
+
+    // vector<int>* graph = static_cast<vector<int>*>(shmptr);
+    // for(int i=0; i<MAX_NODES; i++){
+    //     cout<<i<<": ";
+    //     if(graph[i].empty()) continue;
+    //     cout<<"NOT EMPTY\n";
+    //     for(int j=0; j<graph[i].size(); j++){
+    //         // cout<<graph[i][j]<<" ";
+    //         cout<<graph[i].at(j)<<" ";
+    //     }cout<<endl;
+    // }
+    // if(shmdt(shmptr) == -1) {
+    //     cerr << "Error: could not detach from shared memory\n";
+    //     return 1;
+    // }
     // attach to shared memory
     // vector<int>* graph = (vector<int>*)shmat(shmid, 0, 0);
     // if (graph == (void*)-1) {
