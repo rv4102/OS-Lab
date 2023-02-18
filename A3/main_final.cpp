@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
     }
 
     key_t key = ftok("graph_shared_mem", 'R');
-    int shmid = shmget(key, 2*MAX_NODES*sizeof(int), 0666|IPC_CREAT);
+    int shmid = shmget(0x12345, 2*MAX_NODES*sizeof(int), 0666|IPC_CREAT);
 
     if (shmid == -1) {
         cerr << "Error: could not create shared memory\n";
@@ -52,11 +52,12 @@ int main(int argc, char* argv[]) {
         if(cnt > MAX_NODES) break;
     }
 
-    for(int i=0; i<MAX_NODES; i++){
+    for(int i=0; i<cnt; i++){
         cout<<i<<": ";
         for(int j=0; j<2; j++){
             cout<<graph[i][j]<<" ";
-        }cout<<endl;
+        }
+        cout<<endl;
     }
 
     shmdt(graph);
