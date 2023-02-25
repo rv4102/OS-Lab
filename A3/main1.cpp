@@ -8,7 +8,6 @@
 #include <sys/shm.h>
 
 
-
 typedef struct DNode DNode;
 typedef struct DList DList;
 
