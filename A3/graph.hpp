@@ -18,6 +18,7 @@ typedef struct Graph {
     DNode pool[MAX_DNODE];      // fixed-size space for nodes
     size_t node_to_head[MAX_DNODE];
     size_t node_to_tail[MAX_DNODE];
+    int degree[MAX_DNODE];
     size_t npool;               // used space in pool
     int num_of_nodes;
     void init();

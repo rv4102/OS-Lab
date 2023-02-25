@@ -6,5 +6,8 @@ create.out:	create.cpp graph.cpp graph.hpp
 check.out:	check.cpp graph.cpp graph.hpp
 	g++ check.cpp graph.cpp -o check.out 
 
+producer: producer.cpp graph.cpp graph.hpp
+	g++ producer.cpp graph.cpp -o producer.out
+
 clean:
 	rm -f *.o *.out

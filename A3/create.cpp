@@ -20,20 +20,18 @@ int main(int argc, char* argv[])
     while(infile >> x >> y){
         graph->dnode_push(x,y);
     }
+    // for(int i = 1; i <= 4; i++){
+    //     cout << i << " : ";
+    //     DNode* temp = graph->dnode(graph->node_to_head[i]);
+    //     while(temp != NULL){
+    //         cout << temp->value << " ";
+    //         temp = graph->dnode_next(temp);
+    //     }
+    //     cout << endl;
+    // }
 
-    // graph->dnode_push(1,2);
-    // graph->dnode_push(1,3);
-    // graph->dnode_push(2,3);
-    // graph->dnode_push(2,4);
-    for(int i = 1; i <= 4; i++){
-        cout << i << " : ";
-        DNode* temp = graph->dnode(graph->node_to_head[i]);
-        while(temp != NULL){
-            cout << temp->value << " ";
-            temp = graph->dnode_next(temp);
-        }
-        cout << endl;
-    }
+    cout<<"Graph created successfully"<<endl;
+    cout<<"Total number of nodes: "<<graph->num_of_nodes<<endl;
     shmdt(graph);
     return 0;
 }

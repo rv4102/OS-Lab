@@ -14,6 +14,7 @@ void Graph::init(){
     this->num_of_nodes = 0;
     this->npool = 0;
     for(int i = 0; i < MAX_DNODE; i++){
+        this->degree[i] = 0;
         this->node_to_head[i] = DNULL;
         this->node_to_tail[i] = DNULL;
     }
@@ -27,10 +28,12 @@ void Graph::add_dnode(DNode* node,int a,int b){
     node->next = DNULL;
     if(this->node_to_head[a] == DNULL){
         this->num_of_nodes++;
+        this->degree[a] = 1;
         this->node_to_head[a] = node - this->pool;
         this->node_to_tail[a] = node - this->pool;
     }
     else{
+        this->degree[a]++;
         DNode* temp = dnode(this->node_to_tail[a]);
         temp->next = node - this->pool;
         this->node_to_tail[a] = node - this->pool;
