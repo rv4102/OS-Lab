@@ -23,11 +23,15 @@ typedef struct Graph {
     size_t node_to_tail[MAX_DNODE];
     size_t npool;               // used space in pool
     // size_t head;                // global list head
-    Graph(){
+    void init(){
+        cout << "Graph()" << endl;
+        this->npool = 0;
+        cout << "Starting for" << endl;
         for(int i = 0; i < MAX_DNODE; i++){
-            node_to_head[i] = DNULL;
-            node_to_tail[i] = DNULL;
+            this->node_to_head[i] = DNULL;
+            this->node_to_tail[i] = DNULL;
         }
+        cout << "Graph() end" << endl;
     }
 }Graph;
 
@@ -62,33 +66,29 @@ void add_dnode(DNode* node,int a,int b){
     }
 }
 void dnode_push(int a,int b) {
-    
-    
-    DNode *node1 = dnode_alloc();
+    DNode *node1 =dnode_alloc();
     DNode *node2 = dnode_alloc();
+    add_dnode(node1,a,b);
+    add_dnode(node2,b,a);
 }
 
 int main(int argc, char* argv[])
 {
     int shmid;
-
-    shmid = shmget(IPC_PRIVATE, sizeof(graph), IPC_CREAT | 0660);
+    shmid = shmget(IPC_PRIVATE, sizeof(Graph), IPC_CREAT | 0660);
     if (shmid < 0) exit(1);
 
     graph = (Graph*)shmat(shmid, NULL, 0);
     if (graph == (void *) (-1)) exit(1);
-
+    graph->init();
     // graph->head = DNULL;
-    graph->npool = 0;
-    cout << "Before push" << endl;
     dnode_push(1,2);
     dnode_push(1,3);
     dnode_push(2,3);
     dnode_push(2,4);
-    cout << "After push" << endl;
     cout << "graph->npool : " << graph->npool << endl;
-   for(int i = 0; i < 4; i++){
-        cout << i << " : " << endl;
+    for(int i = 1; i <= 4; i++){
+        cout << i << " : ";
         DNode* temp = dnode(graph->node_to_head[i]);
         while(temp != NULL){
             cout << temp->value << " ";
@@ -96,8 +96,6 @@ int main(int argc, char* argv[])
         }
         cout << endl;
     }
-
     shmdt(graph);
-
     return 0;
 }
