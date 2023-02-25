@@ -6,9 +6,9 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/shm.h>
-#define MAX_DNODE 1000           // Max. domain string length
+#define MAX_DNODE 180000          // Max. domain string length
 #define DNULL (MAX_DNODE + 1)   // NULL value
-#define KEY 1234
+#define KEY 1235
 typedef struct DNode {
     int value;
     size_t next;
