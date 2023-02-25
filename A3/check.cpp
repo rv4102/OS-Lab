@@ -15,6 +15,7 @@ int main(){
         }
         cout << endl;
     }
+    cout << "Num of nodes: " << graph->num_of_nodes << endl;
     shmdt(graph);
     shmctl(shmid, IPC_RMID, NULL);
 }

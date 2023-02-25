@@ -11,6 +11,7 @@ DNode * Graph::dnode(size_t index) {
     return (index == DNULL) ? NULL : this->pool + index;
 }
 void Graph::init(){
+    this->num_of_nodes = 0;
     this->npool = 0;
     for(int i = 0; i < MAX_DNODE; i++){
         this->node_to_head[i] = DNULL;
@@ -25,6 +26,7 @@ void Graph::add_dnode(DNode* node,int a,int b){
     node->value = b;
     node->next = DNULL;
     if(this->node_to_head[a] == DNULL){
+        this->num_of_nodes++;
         this->node_to_head[a] = node - this->pool;
         this->node_to_tail[a] = node - this->pool;
     }

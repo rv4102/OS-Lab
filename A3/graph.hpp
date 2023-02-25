@@ -19,6 +19,7 @@ typedef struct Graph {
     size_t node_to_head[MAX_DNODE];
     size_t node_to_tail[MAX_DNODE];
     size_t npool;               // used space in pool
+    int num_of_nodes;
     void init();
     DNode *dnode_alloc(void);
     DNode *dnode(size_t index);
