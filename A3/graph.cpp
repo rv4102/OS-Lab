@@ -23,7 +23,6 @@ DNode * Graph::dnode_next(const DNode *node) {
     return dnode(node->next);
 }
 void Graph::add_dnode(DNode* node,int a,int b){
-
     node->value = b;
     node->next = DNULL;
     if(this->node_to_head[a] == DNULL){
@@ -45,4 +44,5 @@ void Graph::dnode_push(int a,int b) {
     add_dnode(node1,a,b);
     add_dnode(node2,b,a);
 }
+
 
