@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <queue>
+#include <climits>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -7,6 +9,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/shm.h>
+using namespace std;
 #define MAX_LIST 180000         // Max. domain string length
 #define MAX_NODE 10000          // Max. domain string length
 #define DNULL (MAX_LIST + 1)   // NULL value
@@ -29,5 +32,5 @@ typedef struct Graph {
     DNode *dnode_next(const DNode *node);
     void add_dnode(DNode* node,int a,int b);
     void dnode_push(int a,int b);
-    // void dijkstra(vector<int> sources,vector<int> &dist,vector<int> &parent);
+    void dijkstra(vector<int> sources,vector<int> &dist,vector<int> &parent);
 }Graph;
