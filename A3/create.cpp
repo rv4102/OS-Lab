@@ -1,3 +1,5 @@
+#ifndef __GRAPH_HPP__
+#define __GRAPH_HPP__
 #include "graph.hpp"
 #include <fstream>
 using namespace std;
@@ -35,3 +37,4 @@ int main(int argc, char* argv[])
     shmdt(graph);
     return 0;
 }
+#endif
