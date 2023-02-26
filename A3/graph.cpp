@@ -4,7 +4,7 @@
 using namespace std;
 
 DNode * Graph::dnode_alloc(void) {
-    if (this->npool < MAX_NODE) 
+    if (this->npool < MAX_LIST) 
             return &this->pool[this->npool++];
     else perror("dnode_alloc : npool > MAX_DNODE");
 }
@@ -48,6 +48,7 @@ void Graph::dnode_push(int a,int b) {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 void Graph::dijkstra(vector<int> sources,vector<int> &dist,vector<int> &parent){
@@ -75,5 +76,32 @@ void Graph::dijkstra(vector<int> sources,vector<int> &dist,vector<int> &parent){
         }
     }
 }
+=======
+// void Graph::dijkstra(vector<int> sources,vector<int> &dist,vector<int> &parent){
+//     dist = vector<int>(num_of_nodes,INT_MAX);
+//     parent = vector<int>(num_of_nodes,-1);
+//     priority_queue<pair<int,int>,vector<pair<int,int>>,greater<pair<int,int>>> pq;
+//     for(int i = 0; i < sources.size(); i++){
+//         dist[sources[i]] = 0;
+//         pq.push(make_pair(sources[i],0));
+//     }
+//     while(!pq.empty()){
+//         pair<int,int> top = pq.top();
+//         pq.pop();
+//         int node = top.first;
+//         int distance = top.second;
+//         if(distance > dist[node]) continue;
+//         DNode* temp = dnode(node_to_head[top.first]);
+//         while(temp != NULL){
+//             if(distance + 1 < dist[temp->value]){
+//                 dist[temp->value] = distance + 1;
+//                 parent[temp->value] = node;
+//                 pq.push(make_pair(temp->value,distance + 1));
+//             }
+//             temp = dnode_next(temp);
+//         }
+//     }
+// }
+>>>>>>> 108b321285fdb2021c3b8a47cb24d7ca961d105f
 #endif
 >>>>>>> d0302b80078ee85bfa589ffde0d333b159fe3687
