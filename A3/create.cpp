@@ -1,15 +1,20 @@
-
 #include "graph.hpp"
 #include <fstream>
+
 using namespace std;
-int main(int argc, char* argv[])
-{
+
+int main(int argc, char* argv[]) {
     int shmid;
     shmid = shmget(KEY, sizeof(Graph), IPC_CREAT | 0660);
     cout << "Shmid: " << shmid << endl;
-    if (shmid < 0) exit(1);
+
+    if (shmid < 0) 
+        exit(1);
+
     Graph* graph = (Graph*)shmat(shmid, NULL, 0);
-    if (graph == (void *) (-1)) exit(1);
+    if (graph == (void *) (-1)) 
+        exit(1);
+
     graph->init();
 
     ifstream infile("facebook_combined.txt");
@@ -36,4 +41,3 @@ int main(int argc, char* argv[])
     shmdt(graph);
     return 0;
 }
-#endif

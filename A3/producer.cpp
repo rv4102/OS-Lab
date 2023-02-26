@@ -4,16 +4,14 @@
 #include <queue>
 #include <random>
 
-int main()
-{
+int main() {
     int shmid;
     shmid = shmget(KEY, sizeof(Graph), IPC_CREAT | 0660);
     if (shmid < 0)
         exit(1);
 
     Graph *graph = (Graph *)shmat(shmid, NULL, 0);
-    while (1)
-    {
+    while (1) {
         sleep(50);
         srand(time(NULL));
         int m = rand() % 21 + 10;
