@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
         }
 
         if(optimize) {
-            cout<<"Consumer "<<consumer_no<<" is running with optimization start: "<<start<<" "<<"end: "<<end<<endl;
+            cout<<"Consumer "<<consumer_no<<" is running with optimization"<<endl;
             graph->optimized_dijkstra(src_nodes, dist, parent);
             vector<int> new_nodes;
             for(int i = prev_nodes; i < total_nodes; i++) {
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
             graph->propagate_new_nodes(dist, parent, new_nodes);
         }
         else{
-            cout<<"Consumer "<<consumer_no<<" is running without optimization start: "<<start<<" "<<"end: "<<end<<endl;
+            cout<<"Consumer "<<consumer_no<<" is running without optimization "<<endl;
             graph->dijkstra(non_optimize_src_nodes, dist, parent);
         }
         prev_nodes = total_nodes;
