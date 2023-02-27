@@ -39,4 +39,5 @@ typedef struct Graph {
     void add_dnode(DNode* node, int a, int b);
     void dnode_push(int a, int b);
     void dijkstra(vector<int> sources, vector<int> &dist, vector<int> &parent);
+    void optimized_dijkstra(vector<int> sources, vector<int> &dist, vector<int> &parent);
 } Graph;

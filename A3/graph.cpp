@@ -81,4 +81,38 @@ void Graph::dijkstra(vector<int> sources,vector<int> &dist,vector<int> &parent){
     }
 }
 
+void Graph::optimized_dijkstra(vector<int> sources, vector<int> &dist, vector<int> &parent){
+    dist = vector<int>(num_of_nodes,INT_MAX);
+    parent = vector<int>(num_of_nodes,-1);
+    priority_queue<pair<int,int>,vector<pair<int,int>>,greater<pair<int,int>>> pq;
+    for(int i=0; i<sources.size(); i++){
+        dist[sources[i]] = 0;
+        pq.push(make_pair(0, sources[i]));
+    }
+
+    while( !pq.empty() ) {
+        bool flag = false;
+        int size = pq.size();
+        for(int i = 0; i < size; i++){
+            pair<int,int> top = pq.top();
+            pq.pop();
+            int node = top.second;
+            int distance = top.first;
+            if(distance > dist[node]) continue;
+            DNode* temp = dnode(node_to_head[node]);
+            while(temp != NULL){
+                if(distance + 1 < dist[temp->value]){
+                    dist[temp->value] = distance + 1;
+                    parent[temp->value] = node;
+                    pq.push(make_pair(distance + 1, temp->value));
+                    flag = true;
+                }
+                temp = dnode_next(temp);
+            }
+        }
+        if(!flag) break;
+    }
+}
+
+
 #endif
