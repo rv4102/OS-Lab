@@ -2,7 +2,24 @@
 #include <fstream>
 #include <time.h>
 
-int main() {
+int main(int argc, char *argv[]) {
+    bool optimize = false;
+    if(argc == 2){
+        // cout<<"opt "<<argv[1]<<endl;
+        if(strcmp(argv[1], "-optimize") == 0) {
+            optimize = true;
+        }else{
+            cout << "Usage: ./main [-optimize]" << endl;
+            exit(1);
+        }
+        // if(argv[1] == "-optimize") {
+        //     optimize = true;
+        // }else{
+        //     cout << "Usage: ./main [-optimize]" << endl;
+        //     exit(1);
+        // }
+        // optimize = 1;
+    }
     int shmid;
     shmid = shmget(KEY, sizeof(Graph), IPC_CREAT | 0660);
     cout << "Shmid: " << shmid << endl;
@@ -51,9 +68,8 @@ int main() {
     for(int i=0; i<10; i++){
         consumer_pid[i] = fork();
         if(consumer_pid[i] == 0){
-            char command[100];
-            // sprintf(command, "./consumer.out %d", i+1);
-            execlp("./consumer.out", "./consumer.out", to_string(i+1).c_str(), NULL);
+            if(optimize) execlp("./consumer.out", "./consumer.out", to_string(i+1).c_str(), "-optimize", NULL);
+            else execlp("./consumer.out", "./consumer.out", to_string(i+1).c_str(), NULL);
             perror("execlp failed.\n");
             exit(1);
         }

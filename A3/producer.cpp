@@ -12,7 +12,7 @@ int main() {
 
     Graph *graph = (Graph *)shmat(shmid, NULL, 0);
     while (1) {
-        sleep(5);
+        sleep(50);
         srand(time(NULL));
         int m = rand() % 21 + 10;
         vector<int> k_values(m);
@@ -21,7 +21,7 @@ int main() {
             k_values[i] = rand() % 20 + 1;
         }
 
-        cout << "Number of nodes before updation: " << graph->num_of_nodes << endl;
+        // cout << "Number of nodes before updation: " << graph->num_of_nodes << endl;
         cout << "Number of nodes to be added: " << m << endl;
 
 
