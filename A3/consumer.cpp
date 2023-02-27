@@ -37,7 +37,8 @@ int main(int agrc, char *argv[]) {
             if(i < start || i > end)
                 new_nodes.push_back(i);
         }
-        graph->update_new_nodes(new_nodes, dist, parent);
+        // graph->update_new_nodes(new_nodes, dist, parent);
+        graph->propagate_new_nodes(new_nodes, dist, parent);
         prev_nodes = total_nodes;
         ofstream file;
         string file_name = "Consumer_" + to_string(consumer_no) + ".txt";

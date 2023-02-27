@@ -126,7 +126,6 @@ void Graph::propagate(vector<int> &dist, vector<int> &parent, int node, int pare
 }
 
 void Graph::update_new_nodes(vector<int> &dist, vector<int> &parent,vector<int> new_nodes){
-    
     for(int i = 0; i < new_nodes.size(); i++){
         int new_node = new_nodes[i];
         int min_dist = INT_MAX;
@@ -142,6 +141,49 @@ void Graph::update_new_nodes(vector<int> &dist, vector<int> &parent,vector<int> 
         if(p != -1){
             propagate(dist, parent, new_node, p);
         }
+    }
+}
+void Graph::propagate_new_nodes(vector<int> &dist, vector<int> &parent,vector<int> new_nodes){
+    priority_queue<pair<int,int>,vector<pair<int,int>>,greater<pair<int,int>>> pq;
+    for(int i = 0; i < new_nodes.size(); i++){
+        int new_node = new_nodes[i];
+        int min_dist = INT_MAX;
+        int p = -1;
+        DNode* temp = dnode(node_to_head[new_node]);
+        while(temp != NULL){
+            if(dist[temp->value] < min_dist){
+                min_dist = dist[temp->value];
+                p = temp->value;
+            }
+            temp = dnode_next(temp);
+        }
+        if(p != -1 && min_dist + 1 < dist[new_node]){
+            dist[new_node] = min_dist + 1;
+            parent[new_node] = p;
+            pq.push(make_pair(dist[new_node], new_node));
+        }
+    }
+    while( !pq.empty() ) {
+        bool flag = false;
+        int size = pq.size();
+        for(int i = 0; i < size; i++){
+            pair<int,int> top = pq.top();
+            pq.pop();
+            int node = top.second;
+            int distance = top.first;
+            if(distance > dist[node]) continue;
+            DNode* temp = dnode(node_to_head[node]);
+            while(temp != NULL){
+                if(distance + 1 < dist[temp->value]){
+                    dist[temp->value] = distance + 1;
+                    parent[temp->value] = node;
+                    pq.push(make_pair(distance + 1, temp->value));
+                    flag = true;
+                }
+                temp = dnode_next(temp);
+            }
+        }
+        if(!flag) break;
     }
 }
 
