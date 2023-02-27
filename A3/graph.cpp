@@ -52,22 +52,22 @@ void Graph::dijkstra(vector<int> sources,vector<int> &dist,vector<int> &parent){
     dist = vector<int>(num_of_nodes,INT_MAX);
     parent = vector<int>(num_of_nodes,-1);
     priority_queue<pair<int,int>,vector<pair<int,int>>,greater<pair<int,int>>> pq;
-    for(int i = 0; i < sources.size(); i++){
+    for(int i=0; i<sources.size(); i++){
         dist[sources[i]] = 0;
-        pq.push(make_pair(sources[i],0));
+        pq.push(make_pair(0, sources[i]));
     }
     while(!pq.empty()){
         pair<int,int> top = pq.top();
         pq.pop();
-        int node = top.first;
-        int distance = top.second;
+        int node = top.second;
+        int distance = top.first;
         if(distance > dist[node]) continue;
-        DNode* temp = dnode(node_to_head[top.first]);
+        DNode* temp = dnode(node_to_head[node]);
         while(temp != NULL){
             if(distance + 1 < dist[temp->value]){
                 dist[temp->value] = distance + 1;
                 parent[temp->value] = node;
-                pq.push(make_pair(temp->value,distance + 1));
+                pq.push(make_pair(distance + 1, temp->value));
             }
             temp = dnode_next(temp);
         }
