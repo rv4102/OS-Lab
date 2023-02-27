@@ -26,9 +26,9 @@ int main(int argc, char *argv[]) {
     vector<int> dist(MAX_NODE, INT_MAX);
     vector<int> parent(MAX_NODE, -1);
     int prev_nodes = 0;
-
+    vector<int> non_optimize_src_nodes;
     while (1) {
-        if(!optimize) prev_nodes = 0;
+        // if(!optimize) prev_nodes = 0;
         sleep(30);
         vector<int> src_nodes;
         int total_nodes = graph->num_of_nodes;
@@ -38,13 +38,20 @@ int main(int argc, char *argv[]) {
         int end = prev_nodes + consumer_no * nodes_per_consumer - 1;
         if (consumer_no == 10)
             end = total_nodes - 1;
-        cout<<"Consumer "<<consumer_no<<" is running"<<" with start: "<<start<<" "<<"end: "<<end<<endl;
+        // cout<<"Consumer "<<consumer_no<<" is running"<<" with start: "<<start<<" "<<"end: "<<end<<endl;
         for (int i = start; i <= end; i++) {
             // cout<<i<<" ";
+            non_optimize_src_nodes.push_back(i);
             src_nodes.push_back(i);
         }
-
-        graph->optimized_dijkstra(src_nodes, dist, parent);
+        if(optimize) {
+            cout<<"Consumer "<<consumer_no<<" is running with optimization start: "<<start<<" "<<"end: "<<end<<endl;
+            graph->optimized_dijkstra(src_nodes, dist, parent);
+        }
+        else{
+            cout<<"Consumer "<<consumer_no<<" is running without optimization start: "<<start<<" "<<"end: "<<end<<endl;
+            graph->dijkstra(non_optimize_src_nodes, dist, parent);
+        }
         // cout<<"prev_nodes: "<<prev_nodes<<" "<<"total_nodes: "<<total_nodes<<endl;
         if(optimize) {
             vector<int> new_nodes;
