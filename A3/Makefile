@@ -13,3 +13,4 @@ clean:
 kill:
 	killall -9 producer.out
 	killall -9 consumer.out
+	ipcrm -M 1235
