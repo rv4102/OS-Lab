@@ -18,6 +18,7 @@ int main(int agrc, char *argv[]) {
     vector<int> parent(MAX_NODE, -1);
     int prev_nodes = 0;
     while (1) {
+        sleep(11);
         vector<int> src_nodes;
         int total_nodes = graph->num_of_nodes;
         int consumer_no = atoi(argv[1]);
@@ -27,18 +28,22 @@ int main(int agrc, char *argv[]) {
         if (consumer_no == 10)
             end = total_nodes - 1;
         cout<<"Consumer "<<consumer_no<<" is running"<<endl;
+        
         for (int i = start; i <= end; i++) {
             src_nodes.push_back(i);
         }
 
         graph->optimized_dijkstra(src_nodes, dist, parent);
+        cout<<"prev_nodes: "<<prev_nodes<<" "<<"total_nodes: "<<total_nodes<<endl;
         vector<int> new_nodes;
         for(int i = prev_nodes; i < total_nodes; i++) {
             if(i < start || i > end)
                 new_nodes.push_back(i);
         }
         // graph->update_new_nodes(new_nodes, dist, parent);
-        graph->propagate_new_nodes(new_nodes, dist, parent);
+
+        graph->propagate_new_nodes(dist, parent, new_nodes);
+        cout<<"Consumer "<<consumer_no<<" is done"<<endl;
         prev_nodes = total_nodes;
         ofstream file;
         string file_name = "Consumer_" + to_string(consumer_no) + ".txt";
@@ -59,7 +64,7 @@ int main(int agrc, char *argv[]) {
             file << endl;
         }
         file.close();
-        sleep(30);
+        // sleep(11);
     }
     shmdt(graph);
     return 0;

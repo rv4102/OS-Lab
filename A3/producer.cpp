@@ -12,7 +12,7 @@ int main() {
 
     Graph *graph = (Graph *)shmat(shmid, NULL, 0);
     while (1) {
-        sleep(50);
+        sleep(5);
         srand(time(NULL));
         int m = rand() % 21 + 10;
         vector<int> k_values(m);
@@ -24,23 +24,25 @@ int main() {
         cout << "Number of nodes before updation: " << graph->num_of_nodes << endl;
         cout << "Number of nodes to be added: " << m << endl;
 
+
+        int tot_nodes = graph->num_of_nodes;
         for (int i = 0; i < m; i++)
         {
-            cout << i + 1 << " -> ";
+            // cout << i + 1 << " -> ";
             int node_num = graph->num_of_nodes;
             int k = k_values[i];
 
-            cout << node_num << " : ";
+            // cout << node_num << " : ";
             random_device rd;
             mt19937 gen(rd());
-            discrete_distribution<> dis(graph->degree, graph->degree + graph->num_of_nodes);
+            discrete_distribution<> dis(graph->degree, graph->degree + tot_nodes);
             for (int j = 0; j < k; j++)
             {
                 int neighbour = dis(gen);
-                cout << neighbour << " ";
+                // cout << neighbour << " ";
                 graph->dnode_push(neighbour, node_num);
             }
-            cout << endl;
+            // cout << endl;
         }
         cout << "Number of nodes after updation: " << graph->num_of_nodes << endl;
     }
