@@ -5,20 +5,12 @@
 int main(int argc, char *argv[]) {
     bool optimize = false;
     if(argc == 2){
-        // cout<<"opt "<<argv[1]<<endl;
         if(strcmp(argv[1], "-optimize") == 0) {
             optimize = true;
         }else{
             cout << "Usage: ./main [-optimize]" << endl;
             exit(1);
         }
-        // if(argv[1] == "-optimize") {
-        //     optimize = true;
-        // }else{
-        //     cout << "Usage: ./main [-optimize]" << endl;
-        //     exit(1);
-        // }
-        // optimize = 1;
     }
     int shmid;
     shmid = shmget(KEY, sizeof(Graph), IPC_CREAT | 0660);
@@ -42,15 +34,6 @@ int main(int argc, char *argv[]) {
     while(infile >> x >> y) {
         graph->dnode_push(x,y);
     }
-    // for(int i = 1; i <= 4; i++){
-    //     cout << i << " : ";
-    //     DNode* temp = graph->dnode(graph->node_to_head[i]);
-    //     while(temp != NULL){
-    //         cout << temp->value << " ";
-    //         temp = graph->dnode_next(temp);
-    //     }
-    //     cout << endl;
-    // }
 
     cout<<"Graph created successfully"<<endl;
     cout<<"Total number of nodes: "<<graph->num_of_nodes<<endl;
@@ -58,8 +41,6 @@ int main(int argc, char *argv[]) {
 
     int producer_pid = fork();
     if(producer_pid == 0){
-        // execl("./producer", "./producer", NULL);
-        // execvp("./producer.out", NULL);
         execlp("./producer.out", "./producer.out", NULL);
         perror("execlp failed.\n");
         exit(1);

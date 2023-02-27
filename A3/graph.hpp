@@ -40,8 +40,6 @@ typedef struct Graph {
     void dnode_push(int a, int b);
     void dijkstra(vector<int> sources, vector<int> &dist, vector<int> &parent);
     void optimized_dijkstra(vector<int> sources, vector<int> &dist, vector<int> &parent);
-    void propagate(vector<int> &dist, vector<int> &parent, int node, int distance);
-    void update_new_nodes(vector<int> &dist, vector<int> &parent,vector<int> new_nodes);
     void propagate_new_nodes(vector<int> &dist, vector<int> &parent,vector<int> new_nodes);
 
 
