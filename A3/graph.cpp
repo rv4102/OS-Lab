@@ -82,8 +82,7 @@ void Graph::dijkstra(vector<int> sources,vector<int> &dist,vector<int> &parent){
 }
 
 void Graph::optimized_dijkstra(vector<int> sources, vector<int> &dist, vector<int> &parent){
-    dist = vector<int>(num_of_nodes,INT_MAX);
-    parent = vector<int>(num_of_nodes,-1);
+
     priority_queue<pair<int,int>,vector<pair<int,int>>,greater<pair<int,int>>> pq;
     for(int i=0; i<sources.size(); i++){
         dist[sources[i]] = 0;
@@ -111,6 +110,38 @@ void Graph::optimized_dijkstra(vector<int> sources, vector<int> &dist, vector<in
             }
         }
         if(!flag) break;
+    }
+}
+
+void Graph::propagate(vector<int> &dist, vector<int> &parent, int node, int parent_node){
+    if(dist[node] > dist[parent_node] + 1){
+        dist[node] = dist[parent_node] + 1;
+        parent[node] = parent_node;
+        DNode* temp = dnode(node_to_head[node]);
+        while(temp != NULL && temp->value != parent_node){
+            propagate(dist, parent, temp->value, node);
+            temp = dnode_next(temp);
+        }
+    }
+}
+
+void Graph::update_new_nodes(vector<int> &dist, vector<int> &parent,vector<int> new_nodes){
+    
+    for(int i = 0; i < new_nodes.size(); i++){
+        int new_node = new_nodes[i];
+        int min_dist = INT_MAX;
+        int p = -1;
+        DNode* temp = dnode(node_to_head[new_node]);
+        while(temp != NULL){
+            if(dist[temp->value] < min_dist){
+                min_dist = dist[temp->value];
+                p = temp->value;
+            }
+            temp = dnode_next(temp);
+        }
+        if(p != -1){
+            propagate(dist, parent, new_node, p);
+        }
     }
 }
 
