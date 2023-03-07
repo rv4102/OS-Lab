@@ -8,6 +8,7 @@
 #include <set>
 #include <cmath>
 #include <queue>
+#include <map>
 #include <unordered_map>
 #include <signal.h>
 #include <execinfo.h>
@@ -16,8 +17,8 @@
 using namespace std;
 
 #define NUM_NODES 37700
-#define NUM_READ_POST_THREADS 1
-#define NUM_PUSH_UPDATE_THREADS 1
+#define NUM_READ_POST_THREADS 2
+#define NUM_PUSH_UPDATE_THREADS 2
 
 struct Action{
     int user_id;
@@ -37,16 +38,34 @@ struct Node{
     // pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 };
 
-
 Node nodes[NUM_NODES];
 vector<int> adj[NUM_NODES];
-unordered_map<int, queue<Action>> feed_queue; // shared b/w pushUpdate and readPost
+map<int, map<int, int>> commonNeighbours;
+unordered_map<int, vector<Action>> feed_queue; // shared b/w pushUpdate and readPost
 queue<Action> action_queue; // shared b/w userSimulator and pushUpdate
 pthread_mutex_t action_queue_mutex = PTHREAD_MUTEX_INITIALIZER; // locks action_queue
 pthread_mutex_t feed_queue_mutex = PTHREAD_MUTEX_INITIALIZER; // locks feed_queue
 // pthread_cond_t user_simulator_cv = PTHREAD_COND_INITIALIZER; // userSimulator waits on this
 pthread_cond_t push_update_cv = PTHREAD_COND_INITIALIZER;   // pushUpdate waits on this
 pthread_cond_t read_post_cv = PTHREAD_COND_INITIALIZER; // readPost waits on this
+
+class chronologicalComp {
+public:
+    bool operator()(const Action& a, const Action& b) {
+        return a.action_time < b.action_time;
+    }
+};
+
+class priorityComp {
+    int node_id;
+public:
+    priorityComp(int v){
+        node_id = v;
+    }
+    bool operator()(const Action& a, const Action& b) {
+        return commonNeighbours[node_id][a.user_id] < commonNeighbours[node_id][b.user_id];
+    }
+};
 
 void create_graph(string path){
     ifstream file(path);
@@ -62,6 +81,7 @@ void create_graph(string path){
         adj[y].push_back(x);
 
     }
+    file.close();
     for(int i=0; i<NUM_NODES; i++){
         nodes[i].node_id = i;
         nodes[i].priority = rand()%2;
@@ -69,9 +89,33 @@ void create_graph(string path){
         nodes[i].action_cntr[1] = 0;
         nodes[i].action_cntr[2] = 0;
     }
+}
 
-    file.close();
-}   
+void getCommonNeighbours(){
+    // for every pair of neighbouring nodes in the graph,
+    // find the number of common neighbours
+    // takes 1m26s 
+    for(int i=0; i<NUM_NODES; i++){
+        for(auto nei: adj[i]){
+            int val = 0;
+            if(commonNeighbours[i][nei] == 0 && commonNeighbours[nei][i] == 0){
+                for(auto n1: adj[i]){
+                    for(auto n2: adj[nei]){
+                        if(n1 == n2) val++;
+                    }
+                }
+            }
+            else
+                val = max(commonNeighbours[i][nei], commonNeighbours[nei][i]);
+            commonNeighbours[i][nei] = val;
+            commonNeighbours[nei][i] = val;
+
+            // cout << val;
+        }
+        // cout << endl;
+    }
+}
+
 void* userSimulator(void* arg) {
     int sleep_time = 4; // in seconds
     ofstream log_file;
@@ -85,7 +129,7 @@ void* userSimulator(void* arg) {
         log_file << "Selected 100 random nodes" << endl;
         set<int> selected_nodes;
         while(selected_nodes.size() < 100){
-            int node_id = rand()%NUM_NODES;
+            int node_id = rand()%NUM_NODES + 1; // random number between 1 and 37700
             selected_nodes.insert(node_id);
         }
         for(auto node_id: selected_nodes){
@@ -151,7 +195,8 @@ void* pushUpdate(void* arg) {
             // nodes[node_id].feed_queue.push_back(action); // push action to 
             // nodes[node_id].feed_queue.push(action); // push action to feed_queue
             pthread_mutex_lock(&feed_queue_mutex);
-            feed_queue[node_id].push(action); // push action to feed_queue
+            // feed_queue[node_id].push(action); // push action to feed_queue
+            feed_queue[node_id].push_back(action); // push action to feed_queue
             pthread_cond_signal(&read_post_cv); // signal readPost
             pthread_mutex_unlock(&feed_queue_mutex);
             // cout<<"exiting critical section of pushUpdate for node "<<node_id<<endl;
@@ -183,10 +228,16 @@ void* readPost(void* arg) {
         for(auto it: feed_queue){
             cout<<"thread "<<pthread_self()<<" reading feed_queue of node "<<it.first<<endl;
             int node_id = it.first;
+            int priority = nodes[node_id].priority;
+            if(priority == 0)
+                sort(it.second.begin(), it.second.end(), priorityComp(node_id));
+            else
+                sort(it.second.begin(), it.second.end(), chronologicalComp());
             while(!it.second.empty()){
                 assert(it.second.empty() == false);
                 Action action = it.second.front(); // get action from feed_queue
-                it.second.pop(); // remove action from feed_queue
+                // it.second.pop(); // remove action from feed_queue
+                it.second.pop_back(); // remove action from feed_queue
                 string time_str = ctime(&action.action_time);
                 time_str.pop_back();
                 string log_gen = "I read action number " + to_string(action.action_id) + " of type " + action.action_type + " by user " + to_string(action.user_id) + " at time " + time_str;
@@ -239,11 +290,13 @@ void sigsegv_handler(int sig){
     free(strings);
     exit(1);
 }
+
 int main(){
     // signal(SIGSEGV, sigsegv_handler);
     srand(time(NULL));
     create_graph("musae_git_edges.csv");
     cout<<"Graph created"<<endl;
+    getCommonNeighbours();
     pthread_t userSimulatorThread;
 
     pthread_create(&userSimulatorThread, NULL, userSimulator, NULL);
@@ -277,7 +330,6 @@ int main(){
     // for(int i=0; i<NUM_NODES; i++){
     //     pthread_mutex_destroy(&nodes[i].mutex);
     // }
-
 
     return 0;
 }
