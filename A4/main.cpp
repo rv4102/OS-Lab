@@ -29,6 +29,7 @@ struct Action{
     time_t action_time;
 };
 map<int, map<int, int>> commonNeighbours;
+// int commonNeighbours[NUM_NODES][NUM_NODES];
 set<int> feed_added;
 
 enum comparatorType {chronological, priority_based};
@@ -113,7 +114,8 @@ void create_graph(string path){
     }
     file.close();
     for(int i=0; i<NUM_NODES; i++){\
-        nodes[i] = new Node(i, get_rand_comp());
+        // nodes[i] = new Node(i, get_rand_comp());
+        nodes[i] = new Node(i, chronological);
     }
 }
 
@@ -155,7 +157,7 @@ void* userSimulator(void* arg) {
         log_file << "Selected 100 random nodes" << endl;
         set<int> selected_nodes;
         while(selected_nodes.size() < 100){
-            int node_id = rand()%NUM_NODES + 1; // random number between 1 and 37700
+            int node_id = rand()%NUM_NODES; // random number between 1 and 37700
             selected_nodes.insert(node_id);
         }
         for(auto node_id: selected_nodes){
@@ -304,7 +306,7 @@ int main(){
     srand(time(NULL));
     create_graph("musae_git_edges.csv");
     cout<<"Graph created"<<endl;
-    getCommonNeighbours();
+    // getCommonNeighbours();
     pthread_t userSimulatorThread;
 
     pthread_create(&userSimulatorThread, NULL, userSimulator, NULL);
