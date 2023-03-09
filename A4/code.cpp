@@ -21,8 +21,8 @@ using namespace std;
 // #define NUM_NODES 5
 #define USER_SIMULATOR_SLEEP_TIME 1
 #define ACTION_NODES 100
-#define NUM_READ_POST_THREADS 2
-#define NUM_PUSH_UPDATE_THREADS 4
+#define NUM_READ_POST_THREADS 4
+#define NUM_PUSH_UPDATE_THREADS 8
 
 struct Action{
     int user_id;
@@ -38,7 +38,7 @@ struct Node{
     int action_cntr[3]; // 0:post, 1:comment, 2:like
     int priority;
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-    // pthread_cond_t cv = PTHREAD_COND_INITIALIZER;
+    pthread_cond_t cv = PTHREAD_COND_INITIALIZER;
 };
 
 Node nodes[NUM_NODES];
@@ -121,7 +121,7 @@ void* userSimulator(void* arg) {
         cout << "Error opening file" << endl;
         pthread_exit(NULL);
     }
-    log_file << "User Simulator started" << endl;
+    // log_file << "User Simulator started" << endl;
     while(1){
         log_file << "Selected " << ACTION_NODES << " random nodes" << endl;
         set<int> selected_nodes;
@@ -132,8 +132,8 @@ void* userSimulator(void* arg) {
         for(auto node_id: selected_nodes){
             log_file<< "Node " << node_id << endl;
             int degree = adj[node_id].size();
-            // int num_actions = ceil(log2(degree));
-            int num_actions = 13;
+            int num_actions = ceil(log2(degree));
+            // int num_actions = 13;
             log_file << "Degree: " << degree << " Num actions: " << num_actions << endl;
             for(int i=0; i<num_actions; i++){
                 int action_type = rand()%3;
@@ -183,14 +183,24 @@ void* pushUpdate(void* arg) {
         // pthread_mutex_lock(&read_post_mutex);
 
         for(auto node_id: adj[action.user_id]){
-            pthread_mutex_lock(&nodes[node_id].mutex); // lock node
-            nodes[node_id].feed_queue.push(action); // push action to feed_queue
+            // pthread_mutex_lock(&nodes[node_id].mutex); // lock node
+            // nodes[node_id].feed_queue.push(action); // push action to feed_queue
             // pthread_cond_signal(&nodes[node_id].cv); // signal readFeed
-            pthread_mutex_unlock(&nodes[node_id].mutex); // unlock node
+            // pthread_mutex_unlock(&nodes[node_id].mutex); // unlock node
+            // pthread_cond_signal(&nodes[node_id].cv);
+
+
             pthread_mutex_lock(&read_post_mutex); // lock read_post_mutex
             readPostNodes.insert(node_id); // add node to readPostNodes
             pthread_cond_signal(&read_post_cv); // signal readPost
             pthread_mutex_unlock(&read_post_mutex); // unlock read_post_mutex
+            // pthread_cond_signal(&read_post_cv);
+
+            pthread_mutex_lock(&nodes[node_id].mutex); // lock node
+            nodes[node_id].feed_queue.push(action); // push action to feed_queue
+            log_file << "Pushed action to feed_queue of node " << node_id << endl;
+            pthread_cond_signal(&nodes[node_id].cv); // signal readFeed
+            pthread_mutex_unlock(&nodes[node_id].mutex); // unlock node
         }
         // pthread_cond_signal(&read_post_cv);
         // pthread_mutex_unlock(&read_post_mutex);
@@ -213,13 +223,16 @@ void* readPost(void* arg) {
         while(readPostNodes.empty()){
             pthread_cond_wait(&read_post_cv, &read_post_mutex); // wait for signal from pushUpdate
         }
+        cout<<"cond_wait finished for readPost"<<endl;
         int node_id = *readPostNodes.begin(); // get node_id from readPostNodes
         readPostNodes.erase(readPostNodes.begin()); // remove node_id from readPostNodes
         // pthread_mutex_unlock(&read_post_mutex); // unlock feed_queue for all nodes
+
+
         pthread_mutex_lock(&nodes[node_id].mutex); // lock node
-        // while(nodes[node_id].feed_queue.empty()){
-        //     pthread_cond_wait(&nodes[node_id].cv, &nodes[node_id].mutex); // wait for signal from pushUpdate
-        // }
+        while(nodes[node_id].feed_queue.empty()){
+            pthread_cond_wait(&nodes[node_id].cv, &nodes[node_id].mutex); // wait for signal from pushUpdate
+        }
         cout<<"thread "<<pthread_self()<<" reading feed_queue of node "<<node_id<<endl; 
         while(!nodes[node_id].feed_queue.empty()){
             Action action = nodes[node_id].feed_queue.front(); // get action from feed_queue
@@ -228,17 +241,15 @@ void* readPost(void* arg) {
             time_str.pop_back();
             string log_gen = "User ID " + to_string(node_id) + " read action number " + to_string(action.action_id) + " of type " + action.action_type + " by user " + to_string(action.user_id) + " at time " + time_str;
             log_file<<log_gen<<endl;
-            cout<<log_gen<<endl;
+            // cout<<log_gen<<endl;
         }
         // nodes[node_id].feed_queue = queue<Action>(); // clear feed_queue
-        pthread_mutex_unlock(&read_post_mutex);
         pthread_mutex_unlock(&nodes[node_id].mutex); // unlock node
-        // pthread_mutex_unlock(&read_post_mutex);
+        pthread_mutex_unlock(&read_post_mutex);
     }
     log_file.close();
     pthread_exit(NULL);
 }
-
 
         
 void sigsegv_handler(int sig){
