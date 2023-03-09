@@ -60,4 +60,4 @@ extra/*
 OS\ Lab\ 2021
 *.vscode
 
-.log
+*.log
