@@ -92,4 +92,7 @@ Team Members:
 -   log_file_mutex is again used the same way
 
 # Other optimisations
+-   The condition varibales are used to signal changes in shared data structures to other threads and prevent them from wasting CPU cycles in busy-waiting loop.
+-   Using separate mutex and condition variable for each node, each thread only needs to lock the mutex for specific node it is accessing, reducing frequency of contention. This improves parallel execution.
+-   Using pointers to dynamically allocate for data structures nodes and action_queue help avoid cost of copying large objects, thus reducing memory wastage and enables memory to be released.
 -   All pointers and allocations are freed/deleted once they have served their purpose

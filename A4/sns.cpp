@@ -353,6 +353,7 @@ int main(){
     pthread_mutex_destroy(&log_file_mutex);
     pthread_cond_destroy(&push_update_cv);
     pthread_cond_destroy(&read_post_cv);
+    
     for(int i=0; i<NUM_NODES; i++){
         pthread_mutex_destroy(&(nodes[i]->mutex));
     }
