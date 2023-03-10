@@ -1,0 +1,95 @@
+# DesignDoc for Group-24
+Team Members:
+–   Shivam Raj
+–   Kushaz Sehgal
+–   Jatin Gupta
+–   Rushil Venkateswar
+
+
+# Description of Data Structures used
+
+## class Action
+-   user_id : The ID of the node which performs the action
+-   action_id : Each action_type of each user is maintained as a counter and assigned to 
+                the action_id
+-   action_type : The type of action being done (post, comment, like)
+-   action_time : The time at which each action is done (Unix timestamp)
+-   Action() : constructor which initialises an Action object with default values
+-   Action(const Action& a) : copy constructor
+## class Node
+-   wall_queue : An STL queue of Action objects which stores the Actions done by the node
+-   comparator_ : An object which stores the comparator type for the priority queue used in the feed queue of the Node
+-   feed_queue : An STL priority queue which supports chronological as well as priority based ordering using a custom comparator function
+-   action_cnt[3] : Counter variable for each type of Action done by the Node
+-   mutex : pthread_mutex_t specifying access to the Node's feed_queue
+-   cv : pthread_cond_t declaring a condition variable to wait or signal to other threads trying to access the Node's feed_queue
+-   Node(int node_id, comparatorType comparator) : constructor which initialises a Node object with the custom comparator based on whether the Node has
+                                                    priority based or chronological feed ordering and also initialises other data Members
+
+
+# Size of wall_queue and feed_queue
+
+-   feed_queue and wall_queue are dynamically resized and have no fixed size
+-   For the runtime of the program(tested for 30 mins with SLEEP time set as 4 seconds), it remains of reasonable size and does not take up significant memory
+-   feed_queue is emptied in the readPost thread and thus does not grow arbitrarily large in one iteration of the userSimulator thread
+-   
+
+
+# Other Global Data Structures
+
+## Node* nodes[NUM_NODES]
+-   This array stores the pointer to nodes of the graph and provides an index to reference the nodes
+-   Array of Node pointers which are static once filled
+## vector<int> adj[NUM_NODES]
+-   Vector which stores the adjacency list of each Node ID in the nodes array
+-   Array of STL vectors which are static once filled
+## map<int, map<int, int>> commonNeighbours
+-   A map of maps which stores the number of common neighbours for each pair of nodes which are connected by an edge
+-   This STL map is used for the pre-computation task and is static, once it has been filled
+-   Its size is twice the number of edges in the Graph
+## queue<int> feed_added
+-   A global queue which specifies the Node IDs for which the feed has been updated
+-   This STL queue has no fixed size and is dynamically updated and cleared periodically
+-   There are 25 pushUpdate threads pushing Node IDs to the feed_added queue and 10 readPost threads popping from the queue
+    therefore the queue might take up some memory during one iteration of userSimulator but by the time that 2 minutes have elapsed since userSimulator ran,
+    the feed_added queue is emptied (verified via running the program)
+## queue<Action *> action_queue
+-   A queue of pointers to Actions generated in the userSimulator which are pushed to the neighbours of Nodes which generate the action
+-   This STL queue has no fixed size and is dynamically updated and cleared periodically
+-   Since there is only 1 userSimulator thread creating updates and 25 pushUpdate threads which pop elements from the queue, it does not become too large at any instant
+## action_queue_mutex
+-   A mutex lock which restricts access to action_queue when userSimulator and pushUpdate try to access it
+## feed_added_mutex
+-   A mutex lock which restricts access to feed_added when pushUpdate and readPost try to access it 
+## log_file_mutex
+-   A mutex lock which restricts access to log_file (sns.log) when any thread tries to write to it
+## push_update_cv 
+-   Condition variable which is used to signal or wait for synchronising userSimulator and pushUpdate threads
+## read_post_cv
+-   Condition variable which is used to signal or wait for synchronising pushUpdate and readPost threads
+
+
+# Usage of Locks in the code 
+## userSimulator
+-   action_queue_mutex is used whenever a new action is pushed to the action_queue to ensure no race condition occurs between userSimulator and pushUpdate
+-   push_update is signalled once an action_queue push is complete
+-   log_file_mutex is used to write all updates to the log file once the userSimulator has pushed all actions for all 100 nodes selected 
+-   This mutex ensures that the log file is only accessed once per userSimulator iteration and all the updates which were accumulated in a local stringstream object of the userSimulator thread are written to the file
+## pushUpdate
+-   pushUpdate waits for action_queue to not be empty
+-   action_queue_mutex is used whenever a new action is to be popped from the action_queue
+-   for each neighbours of the user_id in the Action which has been popped, a feed_added_mutex lock is used to push 
+    the Node ID of the neighbour to which updates are being pushed into the feed_added global queue
+-   node_id's mutex is used whenever we push to the node_id's local feed_queue
+-   log_file_mutex is again used to write all updates to the log file once the pushUpdate thread is done
+-   read_post is signalled once this is complete
+-   node_id's cv is also signalled so that any other thread can access this node_id's local feed_queue if needed
+## readPost
+-   readPost waits for feed_added to not be empty
+-   feed_added_mutex is used whenever a new node_id is popped from the feed_added queue
+-   readPost waits for node_id's local feed_queue to not be empty
+-   node_id's mutex is used whenever a new action is popped from the feed_queue of the node_id
+-   log_file_mutex is again used the same way
+
+# Other optimisations
+-   All pointers and allocations are freed/deleted once they have served their purpose

@@ -18,7 +18,7 @@ using namespace std;
 #define NUM_NODES 37700
 #define NUM_READ_POST_THREADS 10
 #define NUM_PUSH_UPDATE_THREADS 25
-#define SLEEP 4
+#define SLEEP 120
 
 class Node;
 class Action;
@@ -125,7 +125,7 @@ Action* get_action(int i){
 
 queue<Action*> action_queue; // shared b/w userSimulator and pushUpdate
 pthread_mutex_t action_queue_mutex = PTHREAD_MUTEX_INITIALIZER; // locks action_queue
-pthread_mutex_t feed_queue_mutex = PTHREAD_MUTEX_INITIALIZER; // locks feed_queue
+pthread_mutex_t feed_added_mutex = PTHREAD_MUTEX_INITIALIZER; // locks feed_queue
 pthread_mutex_t log_file_mutex = PTHREAD_MUTEX_INITIALIZER; // locks writes to log_file
 pthread_cond_t push_update_cv = PTHREAD_COND_INITIALIZER;   // pushUpdate waits on this
 pthread_cond_t read_post_cv = PTHREAD_COND_INITIALIZER; // readPost waits on this
@@ -146,8 +146,8 @@ void create_graph(string path){
     }
     file.close();
     for(int i=0; i<NUM_NODES; i++){
-        // nodes[i] = new Node(i, get_rand_comp());
-        nodes[i] = new Node(i, chronological);
+        nodes[i] = new Node(i, get_rand_comp());
+        // nodes[i] = new Node(i, chronological);
     }
 }
 
@@ -236,9 +236,9 @@ void* pushUpdate(void* arg) {
 
 
         for(auto node_id: adj[action->user_id]){
-            pthread_mutex_lock(&feed_queue_mutex); // lock node
+            pthread_mutex_lock(&feed_added_mutex); // lock node
             feed_added.push(node_id);
-            pthread_mutex_unlock(&feed_queue_mutex);
+            pthread_mutex_unlock(&feed_added_mutex);
 
             pthread_mutex_lock(&nodes[node_id]->mutex); // lock node
             cout << "pushing queue top action : " << action <<"into node" << node_id << endl;
@@ -272,17 +272,17 @@ void* readPost(void* arg) {
     stringstream temp_log;
     // log_file << "Read Post started" << endl;
     while(1){
-        pthread_mutex_lock(&feed_queue_mutex); // lock feed_queue for all nodes
+        pthread_mutex_lock(&feed_added_mutex); // lock feed_queue for all nodes
         while(feed_added.empty()){
             cout << "waiting for signal from pushUpdate" << endl;
-            pthread_cond_wait(&read_post_cv, &feed_queue_mutex); // wait for signal from pushUpdate
+            pthread_cond_wait(&read_post_cv, &feed_added_mutex); // wait for signal from pushUpdate
         }
         cout << "entering critical section of readPost by thread " << pthread_self() << endl;
         assert(!feed_added.empty());
         temp_log << "Read post: feed_added not empty" << "\n";
         int node_id = feed_added.front();
         feed_added.pop();
-        pthread_mutex_unlock(&feed_queue_mutex); // unlock feed_queue for all nodes
+        pthread_mutex_unlock(&feed_added_mutex); // unlock feed_queue for all nodes
         cout << "exiting critical section of readPost by thread " << pthread_self() << endl;
 
         Action* action;
@@ -323,7 +323,7 @@ int main(){
     srand(time(NULL));
     create_graph("musae_git_edges.csv");
     cout<<"Graph created"<<endl;
-    // getCommonNeighbours();
+    getCommonNeighbours();
     pthread_t userSimulatorThread;
 
     pthread_create(&userSimulatorThread, NULL, userSimulator, NULL);
@@ -359,7 +359,7 @@ int main(){
     for(int i = 0; i < NUM_NODES; i++){
         pthread_cond_destroy(&nodes[i]->cv);
     }
-    pthread_mutex_destroy(&feed_queue_mutex);
+    pthread_mutex_destroy(&feed_added_mutex);
 
     return 0;
 }
