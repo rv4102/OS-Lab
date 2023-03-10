@@ -179,7 +179,7 @@ void* userSimulator(void* arg) {
         temp_log << "Selected 100 random nodes\n";
         set<int> selected_nodes;
         while(selected_nodes.size() < 100){
-            int node_id = rand()%NUM_NODES + 1; // random number between 1 and 37700
+            int node_id = rand()%NUM_NODES; // random number between 1 and 37700
             selected_nodes.insert(node_id);
         }
         for(auto node_id: selected_nodes){
@@ -353,7 +353,7 @@ int main(){
     pthread_mutex_destroy(&log_file_mutex);
     pthread_cond_destroy(&push_update_cv);
     pthread_cond_destroy(&read_post_cv);
-    
+
     for(int i=0; i<NUM_NODES; i++){
         pthread_mutex_destroy(&(nodes[i]->mutex));
     }
