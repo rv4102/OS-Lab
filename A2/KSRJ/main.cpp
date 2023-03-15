@@ -14,10 +14,7 @@
 
 using namespace std;
 
-vector<Pipeline*> stored_pipeline; 
-map<pid_t, int> pid_to_idx;  
 vector <string> history;
-pid_t fgpid = 0;
 int history_index = 0;
 bool up = false;
 bool ctrlC = 0, ctrlZ = 0;
@@ -26,8 +23,6 @@ struct termios old_tio;
 #define BLUE "\033[1;34m"
 #define RESET "\033[0m"
 
-bool ongoing = false;
-int run_in_background = 0;
 void setup_terminal(){
     struct termios new_tio;
     tcgetattr(0, &old_tio);     /* grab old terminal i/o settings */
@@ -254,7 +249,6 @@ int main(){
         Pipeline* p = new Pipeline(cmd);
        
         p->executePipeline(); 
-        ongoing = false;
     }
     reset_terminal();
     ofstream save_history;

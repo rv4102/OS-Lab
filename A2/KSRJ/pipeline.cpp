@@ -5,8 +5,6 @@
 #include <sys/signal.h>
 #include <unistd.h>
 
-
-
 using namespace std;
 
 Pipeline::Pipeline(string& cmd) : cmd(cmd), is_bg(0), pgid(-1) {}

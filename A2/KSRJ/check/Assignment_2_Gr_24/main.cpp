@@ -14,10 +14,7 @@
 
 using namespace std;
 
-vector<Pipeline*> stored_pipeline; 
-map<pid_t, int> pid_to_idx;  
 vector <string> history;
-pid_t fgpid = 0;
 int history_index = 0;
 bool up = false;
 bool ctrlC = 0, ctrlZ = 0;
@@ -26,8 +23,6 @@ struct termios old_tio;
 #define BLUE "\033[1;34m"
 #define RESET "\033[0m"
 
-bool ongoing = false;
-int run_in_background = 0;
 void setup_terminal(){
     struct termios new_tio;
     tcgetattr(0, &old_tio);     /* grab old terminal i/o settings */
@@ -37,7 +32,6 @@ void setup_terminal(){
     new_tio.c_cc[VTIME] = 0;            
     tcsetattr(0, TCSANOW, &new_tio);    /* use these new terminal i/o settings now */
 }
-
 
 void print_cmd(string cmd, int cursor_pos, int current_pos, int type){
     int n = cmd.size();
@@ -99,10 +93,8 @@ int main(){
         // getline(cin, cmd);
         int cursor_pos = 0;
         while(1){
-            // cursor_pos = cmd.size();
             setup_terminal();
             char c = getchar();
-            // cout<<(int)c<<" ";
             if(c == 10) {
                 break;
             }
@@ -114,8 +106,7 @@ int main(){
                     print_cmd(cmd, cursor_pos, cursor_pos + 1, 1);
                 }
             }
-            else if(c == 126){
-                // cout<<"delete key"<<endl;
+            else if(c == 126){//126 --> ascii for delete
                 if(cursor_pos < cmd.size()){
                     cmd.erase(cursor_pos, 1);
 
@@ -251,10 +242,9 @@ int main(){
             reset_terminal();
             break;
         }
+        
         Pipeline* p = new Pipeline(cmd);
-       
         p->executePipeline(); 
-        ongoing = false;
     }
     reset_terminal();
     ofstream save_history;

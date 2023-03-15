@@ -292,6 +292,7 @@ void execute_command(vector<string> args){
         }
         return;
     }
+
     // expand wildcards
     for(int i=0; i<args.size(); i++){
         if(args[i].find('*') != string::npos || args[i].find('?') != string::npos){ // if globbing is required
@@ -303,13 +304,13 @@ void execute_command(vector<string> args){
             args.erase(args.begin()+i); // remove the pattern from the arguments
         }
     }
+    
     char* argv[args.size()+1];
     for(int i=0; i<args.size(); i++){
         argv[i] = (char*)args[i].c_str();
     }
     argv[args.size()] = NULL;
     char* const* argv_dup = (char* const*)argv;
-    // cout<<"command to exec: "<<argv[0]<<endl;
     execvp(argv[0], argv_dup);
     cout<<"Error: Command not found"<<endl;
     exit(1);
