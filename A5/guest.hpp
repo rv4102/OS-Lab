@@ -1,5 +1,6 @@
 #include "data_structures.hpp"
 #include <unistd.h>
+#include <sys/time.h>
 
 #define MIN_GUEST_SLEEP_TIME 10
 #define MAX_GUEST_SLEEP_TIME 20
