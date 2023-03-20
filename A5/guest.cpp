@@ -1,4 +1,4 @@
-#include "guest.h"
+#include "guest.hpp"
 
 int gen_random(int a, int b){
     srand(time(NULL));
@@ -21,7 +21,7 @@ void check_out(int guest_idx, int room_id){
 }
 
 void* guest(void* arg){
-    int guest_idx = (int)arg;
+    int guest_idx = *(int *)arg;
     while(1){
         int sleep_time = gen_random(MIN_GUEST_SLEEP_TIME, MAX_GUEST_SLEEP_TIME);    
         sleep(sleep_time);

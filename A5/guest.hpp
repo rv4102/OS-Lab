@@ -8,7 +8,6 @@
 #define MAX_STAY_TIME 30
 using namespace std;
 
-
 struct Room{
     int current_guest;
     int last_time;
