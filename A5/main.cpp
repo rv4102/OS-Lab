@@ -1,13 +1,6 @@
+#include "data_structures.hpp"
 #include "guest.hpp"
 #include "cleaning_staff.hpp"
-#include <iostream>
-#include <algorithm>
-#include <cstdlib>
-#include <ctime>
-#include <random>
-#include <cassert>
-#include <semaphore.h>
-#include <pthread.h>
 
 using namespace std;
 

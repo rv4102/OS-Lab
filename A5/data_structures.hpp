@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <ctime>
+#include <cassert>
 #include <random>
 #include <semaphore.h>
 #include <pthread.h>

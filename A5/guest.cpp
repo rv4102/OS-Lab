@@ -1,5 +1,7 @@
 #include "guest.hpp"
 
+using namespace std;
+
 int gen_random(int a, int b){
     srand(time(NULL));
     return rand()%(b-a+1)+a;
