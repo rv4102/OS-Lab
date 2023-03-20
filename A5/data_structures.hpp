@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <ctime>
+#include <cassert>
 #include <random>
 #include <semaphore.h>
 #include <pthread.h>
@@ -12,7 +13,8 @@ struct Room{
     int current_guest;
     int last_time;
     int current_time;
-    int num_guest_since_last_clean;
+    sem_t room_occupancy; // initialized to 2 to denote that 2 people can occupy the room at the same time
+    bool cleaned = true;
 };
 
 #endif
