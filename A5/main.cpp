@@ -10,22 +10,16 @@ using namespace std;
 int n, x, y;
 int* priority;
 
-
-struct Room{
-    int current_guest;
-    int last_time;
-    int current_time;
-    int num_guest_since_last_clean;
-};
-
 Room* rooms;
-sem_t* sems;
+sem_t rooms_available;
+sem_t room_cleaning;
 
 int main(){
     cin >> n >> x >> y;
     priority = new int[y];
     rooms = new Room[n];
-    sems = new sem_t[n];
+    sem_init(&rooms_available, 0, n);
+    sem_init(&room_cleaning, 0, 0); // no room is being cleaned initially
     for(int i=0; i<y; i++){
         priority[i] = y-i;
     }
@@ -34,7 +28,6 @@ int main(){
         rooms[i].last_time = 0;
         rooms[i].current_time = 0;
         rooms[i].num_guest_since_last_clean = 0;
-        sem_init(&sems[i], 0, 1);       // binary semaphore
     }
 
     srand(time(NULL));
@@ -46,10 +39,14 @@ int main(){
     pthread_t guests[y];
     pthread_t cleaning_staffs[x];
     for(int i=0; i<y; i++){
-        pthread_create(&guests[i], NULL, guest, (void*)i);
+        int* arg = new int;
+        *arg = i;
+        pthread_create(&guests[i], NULL, guest, (void*)arg);
     }
     for(int i=0; i<x; i++){
-        pthread_create(&cleaning_staffs[i], NULL, cleaning_staff, (void*)i);
+        int* arg = new int;
+        *arg = i;
+        pthread_create(&cleaning_staffs[i], NULL, cleaning_staff, (void*)arg);
     }
     for(int i=0; i<y; i++){
         pthread_join(guests[i], NULL);
@@ -57,5 +54,11 @@ int main(){
     for(int i=0; i<x; i++){
         pthread_join(cleaning_staffs[i], NULL);
     }
+
+    delete[] priority;
+    delete[] rooms;
+    sem_destroy(&rooms_available);
+    sem_destroy(&room_cleaning);
+    
     return 0; 
 }   
