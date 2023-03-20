@@ -1,10 +1,10 @@
 #include "data_structures.hpp"
 #include <unistd.h>
-#include <sys/time.h>
-#define MIN_GUEST_SLEEP_TIME 1
-#define MAX_GUEST_SLEEP_TIME 2
-#define MIN_STAY_TIME 1000
-#define MAX_STAY_TIME 3000
+
+#define MIN_GUEST_SLEEP_TIME 10
+#define MAX_GUEST_SLEEP_TIME 20
+#define MIN_STAY_TIME 10
+#define MAX_STAY_TIME 30
 
 extern int n;
 extern int* priority;
