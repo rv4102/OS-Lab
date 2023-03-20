@@ -1,28 +1,23 @@
-#include <iostream>
-#include <algorithm>
-#include <semaphore.h>
-#include <pthread.h>
-#include "guest.h"
-#include "cleaning_staff.h"
+#include "data_structures.hpp"
+#include "guest.hpp"
+#include "cleaning_staff.hpp"
 
 using namespace std;
 
+// global variables
 int n, x, y;
 int* priority;
-
-
-struct Room{
-    int current_guest;
-    int last_time;
-    int current_time;
-    int num_guest_since_last_clean;
-};
-
 Room* rooms;
 sem_t* sems;
 
 int main(){
+    cout << "Enter n, x and y:" << endl;
     cin >> n >> x >> y;
+
+    assert(y>n);
+    assert(n>x);
+    assert(x>1);
+
     priority = new int[y];
     rooms = new Room[n];
     sems = new sem_t[n];
@@ -37,19 +32,19 @@ int main(){
         sem_init(&sems[i], 0, 1);       // binary semaphore
     }
 
-    srand(time(NULL));
-    random_shuffle(priority, priority+y);
+    shuffle(priority, priority+y, default_random_engine(time(NULL)));
     for(int i=0; i<y; i++){
         cout << priority[i] << " ";
     }
+    cout << endl;
 
     pthread_t guests[y];
     pthread_t cleaning_staffs[x];
     for(int i=0; i<y; i++){
-        pthread_create(&guests[i], NULL, guest, (void*)i);
+        pthread_create(&guests[i], NULL, guest, (void *)&i);
     }
     for(int i=0; i<x; i++){
-        pthread_create(&cleaning_staffs[i], NULL, cleaning_staff, (void*)i);
+        pthread_create(&cleaning_staffs[i], NULL, cleaning_staff, (void *)&i);
     }
     for(int i=0; i<y; i++){
         pthread_join(guests[i], NULL);

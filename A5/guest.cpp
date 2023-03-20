@@ -1,10 +1,18 @@
-#include "guest.h"
+#include "guest.hpp"
+
+// global variables
+extern int n, x, y;
+extern int* priority;
+extern Room* rooms;
+extern sem_t* sems;
+
 int gen_random(int a, int b){
     srand(time(NULL));
     return rand()%(b-a+1)+a;
 }
-void* guest(void* arg){
-    int guest_idx = (int)arg;
+
+void *guest(void *arg){
+    int guest_idx = *(int *)arg;
     while(1){
         int sleep_time = gen_random(MIN_GUEST_SLEEP_TIME, MAX_GUEST_SLEEP_TIME);    
         sleep(sleep_time);
@@ -34,7 +42,7 @@ void* guest(void* arg){
                     }
                 }
             }
-        }else{
+        } else{
             rooms[room_id].current_guest = guest_idx;
             rooms[room_id].current_time = stay_time;
             rooms[room_id].num_guest_since_last_clean++;
