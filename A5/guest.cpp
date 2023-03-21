@@ -31,31 +31,25 @@ void check_in(int guest_idx, int stay_time, int room_id){
     struct timespec *stay_time_struct = new struct timespec;
     stay_time_struct->tv_sec = now.tv_sec + stay_time;
     pthread_mutex_lock(&guest_mutexes[guest_idx]);
-    // cout << "Guest " << guest_idx << " waiting while checkin" << endl;
     int ret = pthread_cond_timedwait(&guest_conds[guest_idx], &guest_mutexes[guest_idx], stay_time_struct);
-    // cout << "Guest " << guest_idx << " done waiting while checkin" << endl;
-    if(ret == ETIMEDOUT){
+    if(ret == ETIMEDOUT)
         cout << "Guest : " << guest_idx << " STAY COMPLETED" << endl;
-    }
-    else{
+    else
         cout << "Guest : " << guest_idx << " DISPLACED" << endl;
-    }
     pthread_mutex_unlock(&guest_mutexes[guest_idx]);
+
     // in case we get signal or timer runs out we go here
-    // cout << "checkout called " <<guest_idx<< endl;
     if(ret == ETIMEDOUT){
         pthread_mutex_lock(&room_mutexes[room_id]);
         check_out(guest_idx, room_id);
     }
-    // cout << "checkout done " <<guest_idx<< endl;
 }
 
 void check_out(int guest_idx, int room_id){
     int sem_val = -1;
     sem_getvalue(&rooms[room_id].room_occupancy, &sem_val);
-    if(sem_val == 0){
+    if(sem_val == 0)
         rooms[room_id].current_guest = DIRTY;
-    }
     else 
         rooms[room_id].current_guest = EMPTY;
     cout<<"Guest "<<guest_idx<<" leaves room "<<room_id<<endl;
@@ -65,7 +59,6 @@ void check_out(int guest_idx, int room_id){
 void* guest(void* arg){
     int guest_idx = *(int *)arg;
     while(1){
-
         // sleep initially
         int sleep_time = gen_random(MIN_GUEST_SLEEP_TIME, MAX_GUEST_SLEEP_TIME);    
         sleep(sleep_time);
@@ -106,9 +99,7 @@ void* guest(void* arg){
                 int val, room_guest;
                 pthread_mutex_lock(&room_mutexes[i]);
                 sem_getvalue(&rooms[i].room_occupancy, &val);
-                // cout << "sem val for displacement "<< i <<" is " << val << endl;
                 room_guest = rooms[i].current_guest;
-                // cout << "Guest Priority" << guest_priority << " " << priority[room_guest] << "Val :" << val << endl;
                 if(guest_priority > priority[room_guest] && val != 0){
                     // found a guest with lower priority
                     room_id = i;
@@ -117,6 +108,7 @@ void* guest(void* arg){
                 }
                 pthread_mutex_unlock(&room_mutexes[i]);
             }
+            
             // send signal to removed_guest
             if(removed_guest != -1){
                 cout << "Guest "<<guest_idx <<" added after displacing guest " << removed_guest << endl;

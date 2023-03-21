@@ -22,9 +22,4 @@ struct Room{
     bool cleaned = true;
 };
 
-struct cleaner_room{
-    std::vector<int> room_indexes;
-    int cleaning_staff_idx;
-};
-
 #endif

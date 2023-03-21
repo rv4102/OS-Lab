@@ -8,8 +8,7 @@ void *cleaning_staff(void *arg)
     while (1)
     {
         pthread_mutex_lock(&cleaning_mutexes[cleaning_staff_idx]);
-        while (!is_cleaning)
-        {
+        while (!is_cleaning){
             pthread_cond_wait(&cleaning_conds[cleaning_staff_idx], &cleaning_mutexes[cleaning_staff_idx]);
         }
 
@@ -25,8 +24,8 @@ void *cleaning_staff(void *arg)
             int room_idx = rooms_to_clean[rand_index];
             rooms_to_clean.erase(rooms_to_clean.begin() + rand_index);
             pthread_mutex_unlock(&rooms_to_clean_mutex);
+            
             // clean room
-
             pthread_mutex_lock(&room_mutexes[room_idx]);
             Room room = rooms[room_idx];
             assert(room.current_guest == DIRTY);

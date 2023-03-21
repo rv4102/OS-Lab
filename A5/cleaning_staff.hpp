@@ -14,7 +14,6 @@ extern pthread_mutex_t *cleaning_mutexes;
 extern pthread_cond_t *cleaning_conds;
 extern pthread_mutex_t rooms_to_clean_mutex;
 
-extern cleaner_room *cr;
 extern std::vector<int> rooms_to_clean;
 
 

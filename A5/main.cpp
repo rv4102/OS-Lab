@@ -19,8 +19,6 @@ pthread_cond_t *guest_conds;
 pthread_mutex_t *cleaning_mutexes;
 pthread_cond_t *cleaning_conds;
 
-cleaner_room *cr;
-
 pthread_mutex_t rooms_to_clean_mutex;
 
 int main()
@@ -44,9 +42,6 @@ int main()
 
     cleaning_mutexes = new pthread_mutex_t[x];
     cleaning_conds = new pthread_cond_t[x];
-
-
-    cr = new cleaner_room[x];
 
     for(int i=0; i<y; i++){
         pthread_mutex_init(&guest_mutexes[i], NULL);
@@ -91,9 +86,6 @@ int main()
         *arg = i;
         pthread_create(&cleaning_staffs[i], NULL, cleaning_staff, (void *)arg);
     }
-    // while(1){
-    //     sleep(1);
-    // }
     while(1){
         sleep(1);
         int i=-1;
