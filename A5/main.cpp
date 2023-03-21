@@ -1,6 +1,6 @@
 #include "data_structures.hpp"
 #include "guest.hpp"
-// #include "cleaning_staff.hpp"
+#include "cleaning_staff.hpp"
 using namespace std;
 
 // global variables
@@ -10,7 +10,7 @@ Room *rooms;
 pthread_t *guests;
 pthread_t *cleaning_staffs;
 bool is_cleaning = false;
-
+vector<int> rooms_to_clean;
 pthread_mutex_t *room_mutexes;
 
 pthread_mutex_t *guest_mutexes;
@@ -19,6 +19,9 @@ pthread_cond_t *guest_conds;
 pthread_mutex_t *cleaning_mutexes;
 pthread_cond_t *cleaning_conds;
 
+cleaner_room *cr;
+
+pthread_mutex_t rooms_to_clean_mutex;
 
 int main()
 {
@@ -42,6 +45,9 @@ int main()
     cleaning_mutexes = new pthread_mutex_t[x];
     cleaning_conds = new pthread_cond_t[x];
 
+
+    cr = new cleaner_room[x];
+
     for(int i=0; i<y; i++){
         pthread_mutex_init(&guest_mutexes[i], NULL);
         pthread_cond_init(&guest_conds[i], NULL);
@@ -51,20 +57,17 @@ int main()
         pthread_cond_init(&cleaning_conds[i], NULL);
     }
 
-    // sem_init(&rooms_available, 0, n);
-    // sem_init(&room_cleaning, 0, 0); // no room is being cleaned initially
+    pthread_mutex_init(&rooms_to_clean_mutex, NULL);
+
     for (int i = 0; i < y; i++)
     {
         priority[i] = y - i;
     }
-    // sem_t sema;
-    // cout << sem_init(&sema, 0, 2);
 
     for (int i = 0; i < n; i++)
     {
-        rooms[i].current_guest = -1; // -1->unoccupied
-        rooms[i].last_time = 0;
-        rooms[i].current_time = 0;
+        rooms[i].current_guest = EMPTY;
+        rooms[i].total_time = 0;
         sem_init(&rooms[i].room_occupancy, 0, 2);
         pthread_mutex_init(&room_mutexes[i], NULL);
     }
@@ -82,15 +85,15 @@ int main()
         *arg = i;
         pthread_create(&guests[i], NULL, guest, (void *)arg);
     }
-    // for (int i = 0; i < x; i++)
-    // {
-    //     int *arg = new int;
-    //     *arg = i;
-    //     pthread_create(&cleaning_staffs[i], NULL, cleaning_staff, (void *)arg);
-    // }
-    while(1){
-        sleep(1);
+    for (int i = 0; i < x; i++)
+    {
+        int *arg = new int;
+        *arg = i;
+        pthread_create(&cleaning_staffs[i], NULL, cleaning_staff, (void *)arg);
     }
+    // while(1){
+    //     sleep(1);
+    // }
     while(1){
         sleep(1);
         int i=-1;
@@ -101,20 +104,28 @@ int main()
                 current_guest = rooms[i].current_guest;
                 sem_getvalue(&rooms[i].room_occupancy, &sem_retval);
                 pthread_mutex_unlock(&room_mutexes[i]);
-                if(!(current_guest == -1 && sem_retval == 0)){
+                if(!(current_guest == DIRTY && sem_retval == 0)){
                     break;
                 }
             }
             if(i == n){
+                sleep(0.1);
+                cout << "All rooms are dirty, sending cleaning signals" << endl;
                 is_cleaning = true;
+                rooms_to_clean = vector<int>(n,0);
+                for(int i = 0;i < n;i++){
+                    rooms_to_clean[i] = i;
+                }
                 for(int i = 0;i < n;i++){
                     pthread_mutex_lock(&room_mutexes[i]);
                     rooms[i].cleaned = false;
                     pthread_mutex_unlock(&room_mutexes[i]);
                 }
-                for(int i=0; i<x; i++){
+
+                for(int i=0; i<x; i++){ // we need to clean the rooms now
                     pthread_cond_signal(&cleaning_conds[i]);
                 }
+                // cout << "Cleaning Signals Sent" << endl;
             }
         }
         else{
@@ -127,9 +138,11 @@ int main()
                 pthread_mutex_unlock(&room_mutexes[i]);
             }
             if(i == n){
+                cout << "All rooms are clean,sending guest signals" << endl;
                 is_cleaning = false;
                 for(int i = 0;i < n;i++){
                     pthread_mutex_lock(&room_mutexes[i]);
+                    rooms[i].current_guest = EMPTY;
                     sem_post(&rooms[i].room_occupancy);
                     sem_post(&rooms[i].room_occupancy);
                     pthread_mutex_unlock(&room_mutexes[i]);
@@ -137,15 +150,14 @@ int main()
                 for(int i=0; i < y; i++){
                     pthread_cond_signal(&guest_conds[i]);
                 }
+                // cout << "Guest Signals Sent" << endl;
             }
         }
-        
-
     }
-    for (int i = 0; i < y; i++)
-    {
-        pthread_join(guests[i], NULL);
-    }
+    // for (int i = 0; i < y; i++)
+    // {
+    //     pthread_join(guests[i], NULL);
+    // }
     // for (int i = 0; i < x; i++)
     // {
     //     pthread_join(cleaning_staffs[i], NULL);

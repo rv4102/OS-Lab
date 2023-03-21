@@ -21,78 +21,77 @@ int gen_random(int a, int b){
 void check_in(int guest_idx, int stay_time, int room_id){
     // pthread_mutex_lock(&room_mutexes[room_id]);
     rooms[room_id].current_guest = guest_idx;
-    rooms[room_id].current_time = stay_time;
+    rooms[room_id].total_time += stay_time;
     pthread_mutex_unlock(&room_mutexes[room_id]);
     cout<<"Guest "<<guest_idx<<" enters room "<<room_id<<endl;
+
     // create time struct
     struct timeval now;
     gettimeofday(&now,NULL);
     struct timespec *stay_time_struct = new struct timespec;
-    cout << "stay time: " << stay_time << endl;
     stay_time_struct->tv_sec = now.tv_sec + stay_time;
     pthread_mutex_lock(&guest_mutexes[guest_idx]);
+    // cout << "Guest " << guest_idx << " waiting while checkin" << endl;
     int ret = pthread_cond_timedwait(&guest_conds[guest_idx], &guest_mutexes[guest_idx], stay_time_struct);
+    // cout << "Guest " << guest_idx << " done waiting while checkin" << endl;
     if(ret == ETIMEDOUT){
-        cout << "timed out" << endl;
+        cout << "Guest : " << guest_idx << " STAY COMPLETED" << endl;
     }
     else{
-        cout << "got signal" << endl;
+        cout << "Guest : " << guest_idx << " DISPLACED" << endl;
     }
     pthread_mutex_unlock(&guest_mutexes[guest_idx]);
     // in case we get signal or timer runs out we go here
-    // cout<<"Guest "<<guest_idx<<" exits room "<<room_id<<endl;
-    check_out(guest_idx, room_id);
+    // cout << "checkout called " <<guest_idx<< endl;
+    if(ret == ETIMEDOUT){
+        pthread_mutex_lock(&room_mutexes[room_id]);
+        check_out(guest_idx, room_id);
+    }
+    // cout << "checkout done " <<guest_idx<< endl;
 }
 
 void check_out(int guest_idx, int room_id){
-    pthread_mutex_lock(&room_mutexes[room_id]);
-    rooms[room_id].current_guest = -1;
-    rooms[room_id].last_time = rooms[room_id].current_time;
-    rooms[room_id].current_time = 0;
-    pthread_mutex_unlock(&room_mutexes[room_id]);
+    int sem_val = -1;
+    sem_getvalue(&rooms[room_id].room_occupancy, &sem_val);
+    if(sem_val == 0){
+        rooms[room_id].current_guest = DIRTY;
+    }
+    else 
+        rooms[room_id].current_guest = EMPTY;
     cout<<"Guest "<<guest_idx<<" leaves room "<<room_id<<endl;
+    pthread_mutex_unlock(&room_mutexes[room_id]);
 }
 
 void* guest(void* arg){
     int guest_idx = *(int *)arg;
     while(1){
+
+        // sleep initially
+        int sleep_time = gen_random(MIN_GUEST_SLEEP_TIME, MAX_GUEST_SLEEP_TIME);    
+        sleep(sleep_time);
+
         pthread_mutex_lock(&guest_mutexes[guest_idx]);
         while(is_cleaning){
             pthread_cond_wait(&guest_conds[guest_idx], &guest_mutexes[guest_idx]);
         }
         pthread_mutex_unlock(&guest_mutexes[guest_idx]);
 
-        // cout << "hello" << endl;
-
-        // sleep initially
-        int sleep_time = gen_random(MIN_GUEST_SLEEP_TIME, MAX_GUEST_SLEEP_TIME);    
-        sleep(sleep_time);
-
         // request a room
         int i = -1;
         for(i=0; i<n; i++){
             int room_guest = -1, wait_val = -1;
+
             // use sem_trywait and try to see if any room is available
             pthread_mutex_lock(&room_mutexes[i]);
             room_guest = rooms[i].current_guest;
             if(room_guest == -1){
                 int sem_val;
-                sem_getvalue(&rooms[i].room_occupancy, &sem_val);
-                cout << "sem val for room " << i << " before trywait is " << sem_val << endl;
                 wait_val = sem_trywait(&rooms[i].room_occupancy);
-                // int sem_val;
-                sem_getvalue(&rooms[i].room_occupancy, &sem_val);
-                cout << "sem val for room " << i << " after trywait is " << sem_val << endl;
-                // int a;
-                // sem_getvalue(&rooms[i].room_occupancy, &a);
-                // cout << "Wait val is " << wait_val << " " << a << endl;
             }
             if(room_guest == -1 && wait_val == 0){
-                // cout << "inside room available" << endl;
                 // room available
                 int stay_time = gen_random(MIN_STAY_TIME, MAX_STAY_TIME);
                 check_in(guest_idx, stay_time, i);
-                // pthread_mutex_unlock(&room_mutexes[i]);
                 break;
             }
             pthread_mutex_unlock(&room_mutexes[i]);
@@ -107,7 +106,7 @@ void* guest(void* arg){
                 int val, room_guest;
                 pthread_mutex_lock(&room_mutexes[i]);
                 sem_getvalue(&rooms[i].room_occupancy, &val);
-                cout << "sem val for displacement "<< i <<" is " << val << endl;
+                // cout << "sem val for displacement "<< i <<" is " << val << endl;
                 room_guest = rooms[i].current_guest;
                 // cout << "Guest Priority" << guest_priority << " " << priority[room_guest] << "Val :" << val << endl;
                 if(guest_priority > priority[room_guest] && val != 0){
@@ -118,11 +117,15 @@ void* guest(void* arg){
                 }
                 pthread_mutex_unlock(&room_mutexes[i]);
             }
-            // send signal SIGUSR1 to removed_guest
+            // send signal to removed_guest
             if(removed_guest != -1){
-                cout << "Guest added after displacing guest " << removed_guest << endl;
+                cout << "Guest "<<guest_idx <<" added after displacing guest " << removed_guest << endl;
                 pthread_cond_signal(&guest_conds[removed_guest]);
+                check_out(removed_guest, room_id);
+                // pthread_mutex_unlock(&room_mutexes[room_id]);
+                sem_wait(&rooms[room_id].room_occupancy);
                 int stay_time = gen_random(MIN_STAY_TIME, MAX_STAY_TIME);
+                // pthread_mutex_lock(&room_mutexes[room_id]);
                 check_in(guest_idx, stay_time, room_id);
             }
         }

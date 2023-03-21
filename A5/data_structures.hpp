@@ -8,13 +8,23 @@
 #include <random>
 #include <semaphore.h>
 #include <pthread.h>
+#include <unistd.h>
+#include <vector>
+#include <random>
+
+#define EMPTY -1
+#define DIRTY -2
 
 struct Room{
     int current_guest;
-    int last_time;
-    int current_time;
+    int total_time;
     sem_t room_occupancy; // initialized to 2 to denote that 2 people can occupy the room at the same time
     bool cleaned = true;
+};
+
+struct cleaner_room{
+    std::vector<int> room_indexes;
+    int cleaning_staff_idx;
 };
 
 #endif

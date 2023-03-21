@@ -1,0 +1,14 @@
+Enter n, x and y:
+13 12 6 14 3 5 1 2 8 7 15 4 9 11 10 
+Guest 9 enters room 0
+Guest 5 enters room 1
+Guest 7 enters room 2
+Guest added after displacing guest 9
+Guest : 9 got signal
+checkout called 9
+Guest : 7 timed out
+checkout called 7
+Guest 7 leaves room 2
+Guest : 5 timed out
+checkout called 5
+Guest 5 leaves room 1
