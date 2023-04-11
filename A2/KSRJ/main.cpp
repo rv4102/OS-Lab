@@ -14,7 +14,10 @@
 
 using namespace std;
 
+vector<Pipeline*> stored_pipeline; 
+map<pid_t, int> pid_to_idx;  
 vector <string> history;
+pid_t fgpid = 0;
 int history_index = 0;
 bool up = false;
 bool ctrlC = 0, ctrlZ = 0;

@@ -99,3 +99,7 @@ sls
 cd ..
 sb 191754 -suggest
 kill -9 191752
+cd ..
+ls
+cd KS	
+cd KSRJ
