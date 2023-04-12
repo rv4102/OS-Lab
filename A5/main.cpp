@@ -130,7 +130,7 @@ int main()
                 pthread_mutex_unlock(&room_mutexes[i]);
             }
             if(i == n){
-                cout << "All rooms are clean,sending guest signals" << endl;
+                cout << "All rooms are clean, sending guest signals" << endl;
                 is_cleaning = false;
                 for(int i = 0;i < n;i++){
                     pthread_mutex_lock(&room_mutexes[i]);
