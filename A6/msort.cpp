@@ -8,7 +8,7 @@
 #include "goodmalloc.hpp"
 
 #define MEM_SIZE 250*1024*1024 // 250 MB
-#define LIST_SIZE 50000
+#define LIST_SIZE 1000
 #define RANDOM_INT_RANGE 100000
 
 using namespace std;
@@ -17,7 +17,7 @@ list* sort(list* head, int depth){
     if(head->size <= 1){
         return head;
     }
-    // initScope();
+    initScope();
     int n = head->size;
     int mid = n/2;
     string lname = "left"+to_string(depth);
@@ -103,7 +103,7 @@ list* sort(list* head, int depth){
     //     j++;
     //     k++;
     // }
-    // endScope();
+    endScope();
     return res;
 }
 int main(){
@@ -135,14 +135,13 @@ int main(){
     }
     gettimeofday(&end, NULL);
     cout << "Time taken to assign values to list: " << (end.tv_sec - start.tv_sec) * 1000 + (end.tv_usec - start.tv_usec) / 1000 << " ms" << endl;
-    // printList(l);
+    printList(l);
     cout << "List creation successful" << endl;
     gettimeofday(&start, NULL);
     l = sort(l, 0);
     gettimeofday(&end, NULL);
     cout << "Time taken to sort list: " << (end.tv_sec - start.tv_sec) * 1000 + (end.tv_usec - start.tv_usec) / 1000 << " ms" << endl;
-    // printList(l);
+    printList(l);
     endScope();
     return 0;
-
 }
