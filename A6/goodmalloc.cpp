@@ -62,6 +62,15 @@ void endScope(){
             head = ((element *)getAddr(head))->next;
             cnt++;
         }
+
+        map<string, int>::iterator it;
+        for(it = symbolTable.begin(); it != symbolTable.end(); it++){
+            if(it->second == top){
+                symbolTable.erase(it);
+                break;
+            }
+        }
+
         top = global_stack.top();
         global_stack.pop();
     }

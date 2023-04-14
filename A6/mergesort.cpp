@@ -4,6 +4,7 @@
 #include <stack>
 #include <vector>
 #include <algorithm>
+#include <sys/time.h>
 #include "goodmalloc.hpp"
 
 #define MEM_SIZE 250*1024*1024 // 250 MB
@@ -12,67 +13,75 @@
 
 using namespace std;
 
-void merge(size_t leftSize, list *left, size_t rightSize, list *right, list *l){
-    size_t i=0, j=0, k=0;
-
-    assert(left->size == leftSize);
-    assert(right->size == rightSize);       
-
-    while(i < leftSize && j < rightSize){
-        if(getVal(left, i+1) < getVal(right, j+1)){
-            assignVal(l, k+1, getVal(left, i+1));
-            k++;
+list* sort(list* head, int depth){
+    if(head->size <= 1){
+        return head;
+    }
+    initScope();
+    int n = head->size;
+    int mid = n/2;
+    string lname = "left"+to_string(depth);
+    string rname = "right"+to_string(depth);
+    list* left = (list*)createList(mid, lname.c_str());
+    list* right = (list*)createList(n-mid, rname.c_str());
+    int i = 0;
+    int j = 0;
+    int k = 0;
+    element* lcurr = (element*)getAddr(left->head);
+    element* rcurr = (element*)getAddr(right->head);
+    element* curr = (element*)getAddr(head->head);
+    while(i < mid){
+        lcurr->val = curr->val;
+        lcurr = (element*)getAddr(lcurr->next);
+        curr = (element*)getAddr(curr->next);
+        i++;
+    }
+    while(j < n-mid){
+        rcurr->val = curr->val;
+        rcurr = (element*)getAddr(rcurr->next);
+        curr = (element*)getAddr(curr->next);
+        j++;
+    }
+    left = sort(left, depth+1);
+    right = sort(right, depth+1);
+    i = 0;
+    j = 0;
+    k = 0;
+    string resname = "res"+to_string(depth);
+    list* res = (list*)createList(n, resname.c_str());
+    element* rescurr = (element*)getAddr(res->head);
+    lcurr = (element*)getAddr(left->head);
+    rcurr = (element*)getAddr(right->head);
+    while(i < left->size && j < right->size){
+        if(lcurr->val < rcurr->val){
+            rescurr->val = lcurr->val;
+            lcurr = (element*)getAddr(lcurr->next);
             i++;
         }
         else{
-            assignVal(l, k+1, getVal(right, j+1));
-            k++;
+            rescurr->val = rcurr->val;
+            rcurr = (element*)getAddr(rcurr->next);
             j++;
         }
-    }
-    while(i < leftSize){
-        assignVal(l, k+1, getVal(left, i+1));
+        rescurr = (element*)getAddr(rescurr->next);
         k++;
+    }
+    while(i < left->size){
+        rescurr->val = lcurr->val;
+        lcurr = (element*)getAddr(lcurr->next);
+        rescurr = (element*)getAddr(rescurr->next);
         i++;
-    }
-    while(j < rightSize){
-        assignVal(l, k+1, getVal(right, j+1));
         k++;
+    }
+    while(j < right->size){
+        rescurr->val = rcurr->val;
+        rcurr = (element*)getAddr(rcurr->next);
+        rescurr = (element*)getAddr(rescurr->next);
         j++;
+        k++;
     }
-}
-
-void mergesort(list *l){
-    if(l->size <= 1){
-        return;
-    }
-    initScope();
-    // create two lists
-    size_t leftSize = l->size / 2;
-    size_t rightSize = l->size - leftSize;
-
-    string leftName = "left" + to_string(leftSize);
-    string rightName = "right" + to_string(rightSize);
-
-    list *left = (list *)createList(leftSize, leftName.c_str());
-    list *right = (list *)createList(rightSize, rightName.c_str());
-    
-    // copy elements to left and right
-    for(int i=0; i<leftSize; i++){
-        assignVal(left, i+1, getVal(l, i+1));
-    }
-    for(int i=0; i<rightSize; i++){
-        assignVal(right, i+1, getVal(l, i+1+leftSize));
-    }
-
-    // sort left and right
-    mergesort(left);
-    mergesort(right);
-
-    // merge left and right
-    merge(leftSize, left, rightSize, right, l);
-
-    endScope();
+    freeElem();
+    return res;
 }
 
 int main(){
@@ -84,25 +93,40 @@ int main(){
     }
     cout << "Memory allocation successful" << endl;
 
-    // create a list
+    struct timeval start, end;
+    gettimeofday(&start, NULL);
     list *l = (list *)createList(LIST_SIZE, "list1");
     if(l == NULL){
         cout << "List creation failed" << endl;
         return 0;
     }
+
+    // gettimeofday(&end, NULL);
+    // cout << "Time taken to create list: " << (end.tv_sec - start.tv_sec) * 1000 + (end.tv_usec - start.tv_usec) / 1000 << " ms" << endl;
+    
+    srand(time(NULL));
+    
+    // gettimeofday(&start, NULL);
     for(int i=0; i<LIST_SIZE; i++){
         int val = rand() % RANDOM_INT_RANGE + 1;
-        // dbg(val);
         assignVal("list1", i+1, val);
     }
-    // printList(l);
+
+    // gettimeofday(&end, NULL);
+    // cout << "Time taken to assign values to list: " << (end.tv_sec - start.tv_sec) * 1000 + (end.tv_usec - start.tv_usec) / 1000 << " ms" << endl;
+
+    printList(l);
     cout << "List creation successful" << endl;
 
-    // sort the list
-    mergesort(l);
+    // gettimeofday(&start, NULL);
+    l = sort(l, 0);
+    gettimeofday(&end, NULL);
 
-    // print the list
     printList(l);
+    freeElem();
+    cout << "Time taken to sort list: " << (end.tv_sec - start.tv_sec) * 1000 + (end.tv_usec - start.tv_usec) / 1000 << " ms" << endl;
 
-    endScope();
+    get_mem_footprint();
+    
+    return 0;
 }
