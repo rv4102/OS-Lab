@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <stack>
+#include <queue>
 
 using namespace std;
 
@@ -22,6 +23,7 @@ page_table *pt;
 void *mem_base_ptr;
 map<string, int> symbolTable;
 stack<int> global_stack;
+queue<int> free_list;
 
 int getOffset(void *ptr){
     return (char *)ptr - (char *)mem_base_ptr;
@@ -89,11 +91,58 @@ void *createMem(size_t size){
         pt->entries[i].frame = i*PAGE_SIZE;     // frames at address 0, 12, 24, 36, ...
         pt->entries[i].used = 0;
     }
+
+    // initialize free list
+    for(int i=0; i<num_pages; i++){
+        free_list.push(i);
+    }
+
     return ptr_;
 }
 
 void *createList(size_t size, const char *name){
     // size refers to number of nodes in the list
+    int free_list_size = free_list.size();
+    if(size+1 > free_list_size){
+        printf("Not enough memory to create list\n");
+        exit(1);
+    }
+    int start_index = free_list.front();
+    free_list.pop();
+    void* start = (void *)(getAddr(start_index));
+    pt->entries[start_index].used = 1;
+    list *l = (list *)start;    //list is 12 bytes
+    l->size = size;
+    int curr_node = -1, prev_node = -1, first_node = -1;
+    for(int i=0; i<size; i++){
+        curr_node = free_list.front();
+        free_list.pop();
+        if(first_node == -1){
+            first_node = curr_node;
+        }
+        element* e = (element *)(getAddr(curr_node));
+        e->val = 0;
+        e->prev = -1;
+        e->next = -1;
+        if(prev_node != -1){
+            e->prev = prev_node;
+            element* prev_e = (element *)(getAddr(prev_node));
+            prev_e->next = curr_node;
+        }
+        prev_node = curr_node;
+    }
+    l->head = first_node;
+    l->tail = curr_node;
+    element* e = (element *)(getAddr(curr_node));
+    e->next = first_node;   
+    e = (element *)(getAddr(first_node));
+    e->prev = curr_node;
+    // ((element *)(getAddr(first_node)))->next = curr_node;
+    // ((element *)(getAddr(curr_node)))->next = first_node;
+    symbolTable[name] = start_index;
+    global_stack.push(start_index);
+    return start;
+    /*
     void *start = NULL;
     int start_index = -1;
     if(size > pt->size){
@@ -167,6 +216,7 @@ void *createList(size_t size, const char *name){
     global_stack.push(start_index);
 
     return start;
+    */
 }
 
 int assignVal(const char *name, int index, int val){
@@ -236,6 +286,7 @@ void freeElem(char *name){
     list *l = (list *)(getAddr(idx));
     while(pt->entries[idx].used == 1){
         pt->entries[idx].used = 0;
+        free_list.push(idx);
         idx = ((element *)getAddr(idx))->next;
     }
 
