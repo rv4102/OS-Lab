@@ -6,12 +6,12 @@
 
 using namespace std;
 
-#define PAGE_SIZE sizeof(element)
+#define PAGE_SIZE sizeof(element)   // 12 bytes
 
 typedef struct page_table_entry{
     int frame;
     int used;
-}page_table_entry;
+}page_table_entry;  // 8 bytes
 
 typedef struct page_table{
     page_table_entry *entries;
@@ -57,11 +57,13 @@ void endScope(){
 void printList(list *l)
 {
     int idx = l->head;
-    while(idx != -1){
+    int cnt = 0;
+    while(cnt < l->size){
         cout << ((element *)getAddr(idx))->val << " ";
         idx = ((element *)getAddr(idx))->next;
+        cnt++;
     }
-    cout << endl;
+    cout << "\n";
 }
 
 void *createMem(size_t size){
@@ -71,19 +73,22 @@ void *createMem(size_t size){
     if(size % PAGE_SIZE != 0)
         size = (size / PAGE_SIZE + 1) * PAGE_SIZE;
     
-    int num_pages = size / PAGE_SIZE;
+    int num_pages = size / PAGE_SIZE;       // 21845334
 
     void *ptr_ = malloc(size);
     mem_base_ptr = ptr_;
-    
-    pt = (page_table *)malloc(sizeof(page_table));
+    printf("mem_base_ptr = %p\n", mem_base_ptr);
+    printf("size of page_table = %lu\n", sizeof(page_table));
+    printf("size of page_table_entry = %lu\n", sizeof(page_table_entry));   // 8 bytes
+    pt = (page_table *)malloc(sizeof(page_table));      // 16 bytes
+    printf("pt = %p\n", pt);
+
     pt->size = num_pages;
     pt->entries = (page_table_entry *)malloc(num_pages * sizeof(page_table_entry));
     for(int i=0; i<num_pages; i++){
-        pt->entries[i].frame = i*PAGE_SIZE;
+        pt->entries[i].frame = i*PAGE_SIZE;     // frames at address 0, 12, 24, 36, ...
         pt->entries[i].used = 0;
     }
-
     return ptr_;
 }
 
@@ -113,10 +118,11 @@ void *createList(size_t size, const char *name){
             exit(1);
         }
     }
-
+    // dbg(start_index);
+    // dbg(start);
     // use first fit algorithm to allocate memory
     pt->entries[start_index].used = 1;
-    list *l = (list *)start;
+    list *l = (list *)start;    //list is 12 bytes
     l->size = size;
     int cnt = size;
 
@@ -130,16 +136,24 @@ void *createList(size_t size, const char *name){
             curr_node = i;
             element *e = (element *)(getAddr(curr_node));
             e->val = 0;
-            if(prev_node != -1)
+            e->prev = -1;
+            e->next = -1;
+            if(prev_node != -1){
                 e->prev = prev_node;
-            element *e_prev = (element *)(getAddr(prev_node));
-            e_prev->next = curr_node;
+                element *e_prev = (element *)(getAddr(prev_node));
+                e_prev->next = curr_node;
+            }
+            prev_node = curr_node;
             cnt--;
             if(cnt == 0){
                 break;
             }
         }
     }
+
+    l->head = first_node;
+    l->tail = curr_node;
+    
     element *e_head = (element *)(getAddr(first_node));
     e_head->prev = curr_node;
     element *e_tail = (element *)(getAddr(curr_node));
@@ -171,7 +185,9 @@ int assignVal(const char *name, int index, int val){
 
     list *l = (list *)(getAddr(idx));
     if(index > l->size){
-        printf("Index out of bounds\n");
+        dbg(index);
+        dbg(l->size);
+        printf("Index out of bounds[assign_val]\n");
         exit(1);
     }
 
@@ -188,7 +204,9 @@ int assignVal(const char *name, int index, int val){
 
 int getVal(list *l, int index){
     if(index > l->size){
-        printf("Index out of bounds\n");
+        dbg(index);
+        dbg(l->size);
+        printf("Index out of bounds[getVal]\n");
         exit(1);
     }
 

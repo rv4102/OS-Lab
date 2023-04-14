@@ -7,13 +7,21 @@
 #include "goodmalloc.hpp"
 
 #define MEM_SIZE 250*1024*1024 // 250 MB
-#define LIST_SIZE 50
+#define LIST_SIZE 10
 #define RANDOM_INT_RANGE 100000
 
 using namespace std;
 
 void merge(size_t leftSize, list *left, size_t rightSize, list *right, list *l){
     size_t i=0, j=0, k=0;
+    cout<<"merge started\n";
+    assert(left->size == leftSize);
+    assert(right->size == rightSize);       
+    // dbg(leftSize);
+    // dbg(rightSize);
+    // dbg(l->size);
+    // dbg(left->size);
+    // dbg(right->size);
     while(i < leftSize && j < rightSize){
         if(getVal(left, i+1) < getVal(right, j+1)){
             assignVal("list1", k+1, getVal(left, i+1));
@@ -36,14 +44,14 @@ void merge(size_t leftSize, list *left, size_t rightSize, list *right, list *l){
         k++;
         j++;
     }
+    cout<<"merge ended\n";
 }
 
 void mergesort(list *l){
-    initScope();
     if(l->size <= 1){
         return;
     }
-
+    initScope();
     // create two lists
     size_t leftSize = l->size / 2;
     size_t rightSize = l->size - leftSize;
@@ -54,8 +62,13 @@ void mergesort(list *l){
     list *left = (list *)createList(leftSize, leftName.c_str());
     list *right = (list *)createList(rightSize, rightName.c_str());
 
+    // dbg(leftSize);
+    // dbg(rightSize);
+    // dbg(l->size);
+    // dbg(left->size);
+    // dbg(right->size);
+    
     // copy elements to left and right
-    int idx = l->head;
     for(int i=0; i<leftSize; i++){
         assignVal(leftName.c_str(), i+1, getVal(l, i+1));
     }
@@ -89,8 +102,11 @@ int main(){
         return 0;
     }
     for(int i=0; i<LIST_SIZE; i++){
-        assignVal("list1", i+1, rand() % RANDOM_INT_RANGE + 1);
+        int val = rand() % RANDOM_INT_RANGE + 1;
+        dbg(val);
+        assignVal("list1", i+1, val);
     }
+    printList(l);
     cout << "List creation successful" << endl;
 
     // sort the list

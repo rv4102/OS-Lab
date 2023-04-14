@@ -2,13 +2,14 @@
 #define GOODMALLOC_H
 
 #include <stdlib.h>
-
+#include <cassert>
+#define dbg(x) cout << #x << " = " << x << endl;
 // struct to represent element
 typedef struct element{
     int val;
     int prev; // offset value
     int next; // offset value
-}element;
+}element;       // 12 bytes
 
 // struct to represent a list
 typedef struct list{
