@@ -6,21 +6,7 @@
 
 using namespace std;
 
-// struct to represent element
-typedef struct element{
-    int val;
-    int prev; // offset value
-    int next; // offset value
-}element;
-
 #define PAGE_SIZE sizeof(element)
-
-// struct to represent a list
-typedef struct list{
-    int head; // offset
-    int tail; // offset
-    int size;
-}list;
 
 typedef struct page_table_entry{
     int frame;
@@ -69,6 +55,8 @@ void endScope(){
 }
 
 void *createMem(size_t size){
+    global_stack.push(-2);
+
     // make size a multiple of page size
     if(size % PAGE_SIZE != 0)
         size = (size / PAGE_SIZE + 1) * PAGE_SIZE;
@@ -89,7 +77,7 @@ void *createMem(size_t size){
     return ptr_;
 }
 
-void *createList(size_t size, char *name){
+void *createList(size_t size, const char *name){
     // size refers to number of nodes in the list
     void *start = NULL;
     int start_index = -1;
@@ -151,10 +139,13 @@ void *createList(size_t size, char *name){
     string s(name);
     symbolTable[s] = start_index;
 
+    // add to global stack
+    global_stack.push(start_index);
+
     return start;
 }
 
-int assignVal(char *name, int index, int val){
+int assignVal(const char *name, int index, int val){
     // index specifies the index of the element in the list (1 based)
 
     // get the offset of the list from symbol table
@@ -183,6 +174,22 @@ int assignVal(char *name, int index, int val){
     e->val = val;
 
     return 0;
+}
+
+int getVal(list *l, int index){
+    if(index > l->size){
+        printf("Index out of bounds\n");
+        exit(1);
+    }
+
+    int page_table_idx = l->head;
+    element *e;
+    for(int i=0; i<index; i++){
+        e = (element *)(getAddr(page_table_idx));
+        page_table_idx = e->next;
+    }
+
+    return e->val;
 }
 
 void freeElem(char *name){
