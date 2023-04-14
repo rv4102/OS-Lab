@@ -30,6 +30,7 @@ int getOffset(void *ptr){
 }
 
 char *getAddr(int page_table_index){
+    // type cast to char * to increment by idx bytes exactly
     return (char *)mem_base_ptr + pt->entries[page_table_index].frame;
 }
 
@@ -79,8 +80,6 @@ void printList(list *l)
 }
 
 void *createMem(size_t size){
-    global_stack.push(-2);
-
     // make size a multiple of page size
     if(size % PAGE_SIZE != 0)
         size = (size / PAGE_SIZE + 1) * PAGE_SIZE;
@@ -262,6 +261,26 @@ int assignVal(const char *name, int index, int val){
     return 0;
 }
 
+int assignVal(list *l, int index, int val){
+    int idx = -1;
+    if(index > l->size){
+        dbg(index);
+        dbg(l->size);
+        printf("Index out of bounds[assign_val]\n");
+        exit(1);
+    }
+
+    idx = l->head;
+    element *e;
+    for(int i=0; i<index; i++){
+        e = (element *)(getAddr(idx));
+        idx = e->next;
+    }
+    e->val = val;
+
+    return 0;
+}
+
 int getVal(list *l, int index){
     if(index > l->size){
         dbg(index);
@@ -293,11 +312,16 @@ void freeElem(char *name){
     }
 
     // mark cells as free
-    list *l = (list *)(getAddr(idx));
-    while(pt->entries[idx].used == 1){
-        pt->entries[idx].used = 0;
-        free_list.push(idx);
-        idx = ((element *)getAddr(idx))->next;
+    pt->entries[idx].used = 0;
+    free_list.push(idx);
+    int head = ((list *)getAddr(idx))->head;
+    int n = ((list *)getAddr(idx))->size;
+    int cnt = 0;
+    while(cnt < n){
+        pt->entries[head].used = 0;
+        free_list.push(head);
+        head = ((element *)getAddr(head))->next;
+        cnt++;
     }
 
     // remove from symbol table

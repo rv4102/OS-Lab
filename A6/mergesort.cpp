@@ -7,44 +7,39 @@
 #include "goodmalloc.hpp"
 
 #define MEM_SIZE 250*1024*1024 // 250 MB
-#define LIST_SIZE 10
+#define LIST_SIZE 50000
 #define RANDOM_INT_RANGE 100000
 
 using namespace std;
 
 void merge(size_t leftSize, list *left, size_t rightSize, list *right, list *l){
     size_t i=0, j=0, k=0;
-    cout<<"merge started\n";
+
     assert(left->size == leftSize);
     assert(right->size == rightSize);       
-    // dbg(leftSize);
-    // dbg(rightSize);
-    // dbg(l->size);
-    // dbg(left->size);
-    // dbg(right->size);
+
     while(i < leftSize && j < rightSize){
         if(getVal(left, i+1) < getVal(right, j+1)){
-            assignVal("list1", k+1, getVal(left, i+1));
+            assignVal(l, k+1, getVal(left, i+1));
             k++;
             i++;
         }
         else{
-            assignVal("list1", k+1, getVal(right, j+1));
+            assignVal(l, k+1, getVal(right, j+1));
             k++;
             j++;
         }
     }
     while(i < leftSize){
-        assignVal("list1", k+1, getVal(left, i+1));
+        assignVal(l, k+1, getVal(left, i+1));
         k++;
         i++;
     }
     while(j < rightSize){
-        assignVal("list1", k+1, getVal(right, j+1));
+        assignVal(l, k+1, getVal(right, j+1));
         k++;
         j++;
     }
-    cout<<"merge ended\n";
 }
 
 void mergesort(list *l){
@@ -61,19 +56,13 @@ void mergesort(list *l){
 
     list *left = (list *)createList(leftSize, leftName.c_str());
     list *right = (list *)createList(rightSize, rightName.c_str());
-
-    // dbg(leftSize);
-    // dbg(rightSize);
-    // dbg(l->size);
-    // dbg(left->size);
-    // dbg(right->size);
     
     // copy elements to left and right
     for(int i=0; i<leftSize; i++){
-        assignVal(leftName.c_str(), i+1, getVal(l, i+1));
+        assignVal(left, i+1, getVal(l, i+1));
     }
     for(int i=0; i<rightSize; i++){
-        assignVal(rightName.c_str(), i+1, getVal(l, i+1+leftSize));
+        assignVal(right, i+1, getVal(l, i+1+leftSize));
     }
 
     // sort left and right
@@ -103,23 +92,17 @@ int main(){
     }
     for(int i=0; i<LIST_SIZE; i++){
         int val = rand() % RANDOM_INT_RANGE + 1;
-        dbg(val);
+        // dbg(val);
         assignVal("list1", i+1, val);
     }
-    printList(l);
+    // printList(l);
     cout << "List creation successful" << endl;
 
     // sort the list
     mergesort(l);
 
-
     // print the list
     printList(l);
-    // int idx = l->head;
-    // for(int i=0; i<LIST_SIZE; i++){
-    //     cout << getVal(l, idx) << " ";
-    // }
-    // cout << endl;
 
     endScope();
 }
