@@ -6,7 +6,7 @@
 void *createMem(size_t size);
 void *createList(size_t size, char *name);
 int assignVal(char *name, int index, int val);
-void *freeElem(char *name);
-void *freeElem();
+void freeElem(char *name);
+void freeElem();
 
 #endif
