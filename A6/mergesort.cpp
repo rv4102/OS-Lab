@@ -96,12 +96,14 @@ int main(){
     // sort the list
     mergesort(l);
 
+
     // print the list
-    int idx = l->head;
-    for(int i=0; i<LIST_SIZE; i++){
-        cout << getVal(l, idx) << " ";
-    }
-    cout << endl;
+    printList(l);
+    // int idx = l->head;
+    // for(int i=0; i<LIST_SIZE; i++){
+    //     cout << getVal(l, idx) << " ";
+    // }
+    // cout << endl;
 
     endScope();
 }

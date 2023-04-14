@@ -26,5 +26,6 @@ void freeElem();
 
 void initScope();
 void endScope();
+void printList(list *l);
 
 #endif

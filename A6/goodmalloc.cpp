@@ -54,6 +54,16 @@ void endScope(){
     return;
 }
 
+void printList(list *l)
+{
+    int idx = l->head;
+    while(idx != -1){
+        cout << ((element *)getAddr(idx))->val << " ";
+        idx = ((element *)getAddr(idx))->next;
+    }
+    cout << endl;
+}
+
 void *createMem(size_t size){
     global_stack.push(-2);
 
