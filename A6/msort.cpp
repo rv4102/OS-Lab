@@ -83,6 +83,7 @@ list* sort(list* head, int depth){
     endScope();
     return res;
 }
+
 int main(){
     initScope();
     void *ptr = createMem(MEM_SIZE);
@@ -102,6 +103,7 @@ int main(){
     }
     gettimeofday(&end, NULL);
     cout << "Time taken to create list: " << (end.tv_sec - start.tv_sec) * 1000 + (end.tv_usec - start.tv_usec) / 1000 << " ms" << endl;
+    
     srand(time(NULL));
     
     gettimeofday(&start, NULL);
@@ -111,13 +113,16 @@ int main(){
     }
     gettimeofday(&end, NULL);
     cout << "Time taken to assign values to list: " << (end.tv_sec - start.tv_sec) * 1000 + (end.tv_usec - start.tv_usec) / 1000 << " ms" << endl;
-    printList(l);
+
+    // printList(l);
     cout << "List creation successful" << endl;
+
     gettimeofday(&start, NULL);
     l = sort(l, 0);
     gettimeofday(&end, NULL);
     cout << "Time taken to sort list: " << (end.tv_sec - start.tv_sec) * 1000 + (end.tv_usec - start.tv_usec) / 1000 << " ms" << endl;
-    printList(l);
+    
+    // printList(l);
     endScope();
     get_mem_footprint();
     return 0;

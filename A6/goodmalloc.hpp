@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <cassert>
 #define dbg(x) cout << #x << " = " << x << endl;
+
 // struct to represent element
 typedef struct element{
     int val;
@@ -21,6 +22,7 @@ typedef struct list{
 void *createMem(size_t size);
 void *createList(size_t size, const char *name);
 int assignVal(const char *name, int index, int val);
+int assignVal(list *l, int index, int val);
 int getVal(list *l, int index);
 void freeElem(char *name);
 void freeElem();
