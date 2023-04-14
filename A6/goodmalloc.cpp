@@ -22,52 +22,69 @@ typedef struct list{
     int size;
 }list;
 
-typedef struct mem_{ // struct to represent memory
-    void* head;
-    void* tail;
-    int size;
-    char *used;
-}mem_;
+typedef struct page_table_entry{
+    int frame;
+    int used;
+}page_table_entry;
 
-mem_ *mem;
+typedef struct page_table{
+    page_table_entry *entries;
+    int size;
+}page_table;
+
+page_table *pt;
+void *mem_base_ptr;
 map<string, int> symbolTable;
-stack<int> st;
+stack<int> global_stack;
 
 int getOffset(void *ptr){
-    return (int *)ptr - (int *)mem->head;
+    return (char *)ptr - (char *)mem_base_ptr;
+}
+
+char *getAddr(int page_table_index){
+    return (char *)mem_base_ptr + pt->entries[page_table_index].frame;
 }
 
 void initScope(){
-    st.push(-1);
+    global_stack.push(-1);
     return;
 }
 
 void endScope(){
-    int top = st.top();
-    st.pop();
+    int top = global_stack.top();
+    global_stack.pop();
     while(top != -1){
-        int off = top;
-        while(mem->used[off / PAGE_SIZE] == 1){
-            mem->used[off / PAGE_SIZE] = 0;
-            off = ((element *)((int *)mem->head + off))->next;
+        int idx = top;
+        while(pt->entries[idx].used == 1){
+            pt->entries[idx].used = 0;
+
+            // type cast to char * to increment by idx bytes exactly
+            idx = ((element *)getAddr(idx))->next;
         }
 
-        top = st.top();
-        st.pop();
+        top = global_stack.top();
+        global_stack.pop();
     }
     return;
 }
 
 void *createMem(size_t size){
-    mem = (mem_ *)malloc(sizeof(mem_));
-
+    // make size a multiple of page size
+    if(size % PAGE_SIZE != 0)
+        size = (size / PAGE_SIZE + 1) * PAGE_SIZE;
+    
     int num_pages = size / PAGE_SIZE;
-    mem->used = (char *)malloc(num_pages * sizeof(char));
-    mem->size = num_pages;
 
     void *ptr_ = malloc(size);
-    mem->head = ptr_;
-    mem->tail = (void *)((int *)ptr_ + size);
+    mem_base_ptr = ptr_;
+    
+    pt = (page_table *)malloc(sizeof(page_table));
+    pt->size = num_pages;
+    pt->entries = (page_table_entry *)malloc(num_pages * sizeof(page_table_entry));
+    for(int i=0; i<num_pages; i++){
+        pt->entries[i].frame = i*PAGE_SIZE;
+        pt->entries[i].used = 0;
+    }
 
     return ptr_;
 }
@@ -76,17 +93,17 @@ void *createList(size_t size, char *name){
     // size refers to number of nodes in the list
     void *start = NULL;
     int start_index = -1;
-    if(size > mem->size){
+    if(size > pt->size){
         printf("Not enough memory to create list\n");
         exit(1);
     }
     else{
         size_t cnt=size+1; // 1 extra cell needed to keep head tail pointers of list
-        for(int i=0; i<mem->size; i++){
-            if(mem->used[i] == 0){
+        for(int i=0; i<pt->size; i++){
+            if(pt->entries[i].used == 0){
                 if(start == NULL){
                     start_index = i;
-                    start = (void *)((int *)mem->head + i*PAGE_SIZE);
+                    start = (void *)(getAddr(i));
                 }
                 cnt--;
                 if(cnt == 0)
@@ -100,39 +117,40 @@ void *createList(size_t size, char *name){
     }
 
     // use first fit algorithm to allocate memory
-    mem->used[start_index] = 1;
+    pt->entries[start_index].used = 1;
     list *l = (list *)start;
     l->size = size;
     int cnt = size;
 
-    int curr=-1, prev=-1, first=-1;
-    for(int i=0; i<mem->size; i++){
-        if(mem->used[i] == 0){
-            mem->used[i] = 1;
-            if(first == -1){
-                first = i;
+    int curr_node=-1, prev_node=-1, first_node=-1;
+    for(int i=0; i<pt->size; i++){
+        if(pt->entries[i].used == 0){
+            pt->entries[i].used = 1;
+            if(first_node == -1){
+                first_node = i;
             }
-            curr = i;
-            element *e = (element *)((int *)mem->head + curr*PAGE_SIZE);
+            curr_node = i;
+            element *e = (element *)(getAddr(curr_node));
             e->val = 0;
-            if(prev != -1)
-                e->prev = prev;
-            element *e_prev = (element *)((int *)mem->head + prev*PAGE_SIZE);
-            e_prev->next = curr;
+            if(prev_node != -1)
+                e->prev = prev_node;
+            element *e_prev = (element *)(getAddr(prev_node));
+            e_prev->next = curr_node;
             cnt--;
             if(cnt == 0){
                 break;
             }
         }
     }
-    element *e_head = (element *)((int *)mem->head + first*PAGE_SIZE);
-    e_head->prev = curr;
-    element *e_tail = (element *)((int *)mem->head + curr*PAGE_SIZE);
-    e_tail->next = first;
+    element *e_head = (element *)(getAddr(first_node));
+    e_head->prev = curr_node;
+    element *e_tail = (element *)(getAddr(curr_node));
+    e_tail->next = first_node;
 
     // add to symbol table
     string s(name);
-    symbolTable[s] = getOffset(start);
+    symbolTable[s] = start_index;
+
     return start;
 }
 
@@ -140,28 +158,28 @@ int assignVal(char *name, int index, int val){
     // index specifies the index of the element in the list (1 based)
 
     // get the offset of the list from symbol table
-    int offset = -1;
+    int idx = -1;
     string s(name);
     if(symbolTable.find(s) != symbolTable.end()){
-        offset = symbolTable[s];
+        idx = symbolTable[s];
     }
     else{
         printf("List not found\n");
         exit(1);
     }
 
-    list *l = (list *)((int *)mem->head + offset);
+    list *l = (list *)(getAddr(idx));
     if(index > l->size){
         printf("Index out of bounds\n");
         exit(1);
     }
 
+    idx = l->head;
+    element *e;
     for(int i=0; i<index; i++){
-        element *e = (element *)((int *)mem->head + offset);
-        offset = e->next;
+        e = (element *)(getAddr(idx));
+        idx = e->next;
     }
-
-    element *e = (element *)((int *)mem->head + offset);
     e->val = val;
 
     return 0;
@@ -169,10 +187,10 @@ int assignVal(char *name, int index, int val){
 
 void freeElem(char *name){
     // get the offset of the list from symbol table
-    int offset = -1;
+    int idx = -1;
     string s(name);
     if(symbolTable.find(s) != symbolTable.end()){
-        offset = symbolTable[s];
+        idx = symbolTable[s];
     }
     else{
         printf("List not found\n");
@@ -180,11 +198,10 @@ void freeElem(char *name){
     }
 
     // mark cells as free
-    int off = symbolTable[s];
-    list *l = (list *)((int *)mem->head + off);
-    while(mem->used[off / PAGE_SIZE] == 1){
-        mem->used[off / PAGE_SIZE] = 0;
-        off = ((element *)((int *)mem->head + off))->next;
+    list *l = (list *)(getAddr(idx));
+    while(pt->entries[idx].used == 1){
+        pt->entries[idx].used = 0;
+        idx = ((element *)getAddr(idx))->next;
     }
 
     // remove from symbol table
