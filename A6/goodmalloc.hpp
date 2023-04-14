@@ -29,5 +29,6 @@ void initScope();
 void endScope();
 void printList(list *l);
 char *getAddr(int page_table_index);
+void get_mem_footprint();
 
 #endif

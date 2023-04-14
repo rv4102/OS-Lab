@@ -8,7 +8,7 @@
 #include "goodmalloc.hpp"
 
 #define MEM_SIZE 250*1024*1024 // 250 MB
-#define LIST_SIZE 10
+#define LIST_SIZE 50000
 #define RANDOM_INT_RANGE 100000
 
 using namespace std;
@@ -31,14 +31,12 @@ list* sort(list* head, int depth){
     element* rcurr = (element*)getAddr(right->head);
     element* curr = (element*)getAddr(head->head);
     while(i < mid){
-        // assignVal(lname.c_str(), i+1, getVal(head, i+1));
         lcurr->val = curr->val;
         lcurr = (element*)getAddr(lcurr->next);
         curr = (element*)getAddr(curr->next);
         i++;
     }
     while(j < n-mid){
-        // assignVal(rname.c_str(), j+1, getVal(head, mid+j+1));
         rcurr->val = curr->val;
         rcurr = (element*)getAddr(rcurr->next);
         curr = (element*)getAddr(curr->next);
@@ -82,27 +80,6 @@ list* sort(list* head, int depth){
         j++;
         k++;
     }
-    // while(i < left->size && j < right->size){
-    //     if(getVal(left, i+1) < getVal(right, j+1)){
-    //         assignVal(resname.c_str(), k+1, getVal(left, i+1));
-    //         i++;
-    //     }
-    //     else{
-    //         assignVal(resname.c_str(), k+1, getVal(right, j+1));
-    //         j++;
-    //     }
-    //     k++;
-    // }
-    // while(i < left->size){
-    //     assignVal(resname.c_str(), k+1, getVal(left, i+1));
-    //     i++;
-    //     k++;
-    // }
-    // while(j < right->size){
-    //     assignVal(resname.c_str(), k+1, getVal(right, j+1));
-    //     j++;
-    //     k++;
-    // }
     endScope();
     return res;
 }
@@ -130,7 +107,6 @@ int main(){
     gettimeofday(&start, NULL);
     for(int i=0; i<LIST_SIZE; i++){
         int val = rand() % RANDOM_INT_RANGE + 1;
-        // dbg(val);
         assignVal("list1", i+1, val);
     }
     gettimeofday(&end, NULL);
@@ -143,5 +119,6 @@ int main(){
     cout << "Time taken to sort list: " << (end.tv_sec - start.tv_sec) * 1000 + (end.tv_usec - start.tv_usec) / 1000 << " ms" << endl;
     printList(l);
     endScope();
+    get_mem_footprint();
     return 0;
 }
