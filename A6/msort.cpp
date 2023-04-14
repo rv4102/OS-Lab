@@ -8,7 +8,7 @@
 #include "goodmalloc.hpp"
 
 #define MEM_SIZE 250*1024*1024 // 250 MB
-#define LIST_SIZE 1000
+#define LIST_SIZE 10
 #define RANDOM_INT_RANGE 100000
 
 using namespace std;

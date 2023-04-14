@@ -43,13 +43,23 @@ void endScope(){
     global_stack.pop();
     while(top != -1){
         int idx = top;
-        while(pt->entries[idx].used == 1){
-            pt->entries[idx].used = 0;
-
-            // type cast to char * to increment by idx bytes exactly
-            idx = ((element *)getAddr(idx))->next;
+        // while(pt->entries[idx].used == 1){
+        //     pt->entries[idx].used = 0;
+        //     free_list.push(idx);
+        //     // type cast to char * to increment by idx bytes exactly
+        //     // idx = ((element *)getAddr(idx))->next;
+        // }
+        pt->entries[idx].used = 0;
+        free_list.push(idx);
+        int head = ((list *)getAddr(idx))->head;
+        int n = ((list *)getAddr(idx))->size;
+        int cnt = 0;
+        while(cnt < n){
+            pt->entries[head].used = 0;
+            free_list.push(head);
+            head = ((element *)getAddr(head))->next;
+            cnt++;
         }
-
         top = global_stack.top();
         global_stack.pop();
     }
