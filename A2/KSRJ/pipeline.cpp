@@ -1,6 +1,5 @@
-#include "pipeline.h"
-#include "signal_handlers.h"
-
+#include "pipeline.hpp"
+#include "signal_handlers.hpp"
 #include <signal.h>
 #include <sys/signal.h>
 #include <unistd.h>

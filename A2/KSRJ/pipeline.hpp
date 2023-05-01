@@ -1,11 +1,11 @@
-#ifndef __PIPELINE_H
-#define __PIPELINE_H
+#ifndef __PIPELINE_HPP
+#define __PIPELINE_HPP
 
 #include <string>
 #include <vector>
+#include "commands.hpp"
+#include "utils.hpp"
 
-#include "commands.h"
-#include "utils.h"
 using namespace std;
 
 #define RUNNING 0

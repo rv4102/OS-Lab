@@ -1,7 +1,13 @@
-#ifndef COMMANDS_H
-#define COMMANDS_H
-#include "commands.h"
-#include "utils.h"
+#include "commands.hpp"
+#include "utils.hpp"
+#include <signal.h>
+#include <sstream>
+#include <fstream>
+#include <unistd.h>
+#include <dirent.h>
+#include <fcntl.h>
+#include <glob.h>
+#include <iostream>
 
 pid_t get_parent(pid_t pid){
     std::ostringstream stat_path;
@@ -24,8 +30,8 @@ pid_t get_parent(pid_t pid){
     line_stream >> ppid;
     return ppid;
 }
-double get_cpu_usage(pid_t pid)
-{
+
+double get_cpu_usage(pid_t pid){
     std::string stat_file = "/proc/" + std::to_string(pid) + "/stat";
     std::string stat_contents;
     std::ifstream stream(stat_file);
@@ -83,6 +89,7 @@ pid_t detect_malware(vector<pid_t> pids){
     }
     return 0;
 }
+
 vector<pid_t> get_parents(pid_t pid){
     vector<pid_t> parents;
     while(pid != 0){
@@ -117,8 +124,8 @@ COMMAND handle_input_output_redirection(string cmd){
     }
     return COMMAND(ans);
 }
-int delep(string filename)
-{
+
+int delep(string filename){
     int fd[2];
     pipe(fd);
     pid_t process = fork();
@@ -217,6 +224,7 @@ int delep(string filename)
 
     return 0;
 }
+
 void redirect_in_out(string inp, string out){
     if(!inp.empty()){
         int fd = open(inp.c_str(), O_RDONLY);
@@ -315,4 +323,3 @@ void execute_command(vector<string> args){
     cout<<"Error: Command not found"<<endl;
     exit(1);
 }
-#endif

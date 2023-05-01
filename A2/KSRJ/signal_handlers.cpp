@@ -1,10 +1,12 @@
-#include "signal_handlers.h"
+#include "signal_handlers.hpp"
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <signal.h>
 #include <map>
 
 using namespace std;
+
 void reapProcesses(int signum) {
     int count = 0;
     while (true) {

@@ -1,13 +1,11 @@
-#ifndef __SIGNAL_HANDLERS_H
-#define __SIGNAL_HANDLERS_H
+#ifndef __SIGNAL_HANDLERS_HPP
+#define __SIGNAL_HANDLERS_HPP
 
 #include <sys/types.h>
 #include <unistd.h>
-
 #include <map>
 #include <vector>
-
-#include "pipeline.h"
+#include "pipeline.hpp"
 
 using namespace std;
 

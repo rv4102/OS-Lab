@@ -1,16 +1,16 @@
+#include <iostream>
 #include <signal.h>
 #include <sys/signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-
-#include <deque>
 #include <map>
-
-#include "commands.h"
-#include "pipeline.h"
-#include "signal_handlers.h"
-#include "utils.h"
+#include <termios.h>
+#include <fstream>
+#include "commands.hpp"
+#include "pipeline.hpp"
+#include "signal_handlers.hpp"
+#include "utils.hpp"
 
 using namespace std;
 
@@ -237,7 +237,7 @@ int main(){
         // }
         history.push_back(cmd);
         history_index=history.size();
-        // trim(cmd);
+
         cmd = trim(cmd);
         reset_terminal();
         if(cmd.empty()) {

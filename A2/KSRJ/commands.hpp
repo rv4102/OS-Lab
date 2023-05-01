@@ -1,31 +1,24 @@
-#ifndef __COMMANDS_H
-#define __COMMANDS_H
-#include <iostream>
-#include <fstream>
+#ifndef __COMMANDS_HPP
+#define __COMMANDS_HPP
+
 #include <string>
 #include <vector>
-#include <unistd.h>
-#include <sys/wait.h>
 #include <sys/types.h>
-#include <fcntl.h>
-#include <cstring>
-#include <cstdio>
-#include <termios.h>
-#include <glob.h>
-#include <map>
-#include <sstream>
-#include <dirent.h>
+
 using namespace std;
+
 typedef struct command{
     string cmd;
     string inp;
     string out;
+    
     command(vector<string> v){
         cmd = v[0];
         inp = v[1];
         out = v[2];
     }
 }COMMAND;
+
 COMMAND handle_input_output_redirection(string cmd);
 void redirect_in_out(string inp, string out);
 void execute_command(vector<string> args);
